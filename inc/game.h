@@ -9,9 +9,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define GAME_INIT_SNAKELEN   1
-#define GAME_INIT_SNAKEPOS_X 0
-#define GAME_INIT_SNAKEPOS_Y 0
+#include <global.h>
 
 /**
  * TODO - Documentation
@@ -52,6 +50,8 @@ struct ent_snake
  */
 struct ent_snake_seg
 {
+  bool dying;
+
   unsigned int x;
   unsigned int y;
 
@@ -67,5 +67,7 @@ extern unsigned int game_y_bound;
 extern struct ent_snake * snake; // TODO: Const?
 
 void game_setup(unsigned int init_x, unsigned int init_y);
+bool game_update(void);
+void game_unset(void);
 
 #endif // GAME_H

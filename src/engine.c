@@ -15,18 +15,18 @@
 #include <engine.h>
 
 // external global variables
-_Bool  is_engine_running;  // engine.h
+bool is_engine_running;  // engine.h
 
 unsigned int game_x_bound; // game.h
 unsigned int game_y_bound; // game.h
 struct ent_snake * snake;  // game.h
 
 // global variables
-static _Bool do_tick; // whether the engine should keep running
-static int   last_ch; // most recently input key
+static bool do_tick; // whether the engine should keep running
+static int  last_ch; // most recently input key
 
 // kb_listen thread variables
-static _Bool     do_kb_listen = true; // 
+static bool      do_kb_listen = true; // 
 static pthread_t kb_listen_threadid;  // id from pthread_create
 
 /**
@@ -56,10 +56,7 @@ void start(void)
 
   // setup modules
   graphics_setup(); // does ncurses initialization
-  game_setup(0, 0); // TODO use 'real' initial coords
-
-  // TODO do this before game_setup
-  getmaxyx(stdscr, game_y_bound, game_x_bound);
+  game_setup(game_x_bound / 2, game_y_bound / 2);
 
   // start keyboard listening thread
   pthread_create(&kb_listen_threadid, NULL, kb_listen, NULL);

@@ -9,7 +9,9 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-extern _Bool is_engine_running;
+#include <global.h>
+
+extern bool is_engine_running;
 
 void start(void);
 void stop(void);
