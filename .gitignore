@@ -1,3 +1,9 @@
+# Executable
+tty-snake
+
+# Vim settings
+.vim/
+
 # Object files
 *.o
 *.ko
