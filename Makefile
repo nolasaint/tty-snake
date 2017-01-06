@@ -8,7 +8,7 @@ SRC     := $(wildcard $(SRC_DIR)/*.c)
 OBJ     := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CC      := gcc
-CFLAGS  := -I$(INC_DIR)
+CFLAGS  := -I$(INC_DIR) -g3
 LDFLAGS := -lncurses -lpthread
 
 # define default target

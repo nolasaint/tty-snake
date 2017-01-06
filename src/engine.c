@@ -6,8 +6,10 @@
  * See COPYRIGHT for copyright information.
  */
 
+#include <fcntl.h>   // XXX open()
 #include <ncurses.h> // getch()
 #include <pthread.h> // pthread_create()
+#include <stdio.h>   // XXX printf()
 
 #include <game.h>
 #include <graphics.h>
@@ -23,6 +25,7 @@ struct ent_snake * snake;  // game.h
 
 // global variables
 static bool do_tick; // whether the engine should keep running
+#ifdef USE_KB_LISTEN_THREAD
 static int  last_ch; // most recently input key
 
 // kb_listen thread variables
@@ -42,14 +45,43 @@ static void * kb_listen(void * arg)
 {
   while (do_kb_listen)
     last_ch = getch();
+
+  printf("kb_listen exiting\n");
+  pthread_exit(NULL);
+}
+#endif // USE_KB_LISTEN_THREAD
+
+/**
+ * function:  _engine_stop
+ * -----------------------
+ * stops the engine normally.
+ *
+ * TODO could just do this at end of engine_start
+ */
+static void _engine_stop(void)
+{
+  // unset modules
+  graphics_unset();
+  game_unset();
+
+  #ifdef USE_KB_LISTEN_THREAD
+  // signal and wait for kb listen thread to stop
+  do_kb_listen = false;
+
+  pthread_join(kb_listen_threadid, NULL);
+  #endif
+
+  is_engine_running = false;
+
+  printf("exited with _engine_stop\n");
 }
 
 /**
- * function:  start
- * ----------------
+ * function:  engine_start
+ * -----------------------
  * starts the game engine.
  */
-void start(void)
+void engine_start(void)
 {
   is_engine_running = true;
   do_tick           = true;
@@ -58,87 +90,81 @@ void start(void)
   graphics_setup(); // does ncurses initialization
   game_setup(game_x_bound / 2, game_y_bound / 2);
 
+  // set timeout so getch() is non-blocking
+  timeout(0);
+
+  #ifdef USE_KB_LISTEN_THREAD
   // start keyboard listening thread
   pthread_create(&kb_listen_threadid, NULL, kb_listen, NULL);
+  #endif
 
   // engine tick
   while (do_tick)
   {
+    // check for keyboard input
+    #ifdef USE_KB_LISTEN_THREAD
     switch (last_ch)
+    #else
+    switch (getch())
+    #endif
     {
+      case ERR:
+        break;
+
       case KEY_UP:
+      case 'w':
         snake->velocity = VEL_UP;
+        last_ch = -1;
         break;
 
       case KEY_RIGHT:
+      case 'd':
         snake->velocity = VEL_RIGHT;
+        last_ch = -1;
         break;
 
       case KEY_DOWN:
+      case 's':
         snake->velocity = VEL_DOWN;
+        last_ch = -1;
         break;
 
       case KEY_LEFT:
+      case 'a':
         snake->velocity = VEL_LEFT;
+        last_ch = -1;
         break;
 
+      // quit immediately
       case 'q':
-        do_tick = false;
-        break;
+        goto quit;
     }
 
-    last_ch = -1;
+    // TODO use update rates for game_update and graphics_update
 
-    // XXX stop engine on quit (temp)
-    if (!do_tick) break;
-
-    // TODO this should probably happen in _Bool game_update
-    switch (snake->velocity)
-    {
-      case VEL_UP:
-        snake->head->y -= 1;
-        break;
-
-      case VEL_RIGHT:
-        snake->head->x += 1;
-        break;
-
-      case VEL_DOWN:
-        snake->head->y += 1;
-        break;
-
-      case VEL_LEFT:
-        snake->head->x -= 1;
-        break;
-    }
+    // update entities and re-draw
+    game_update(); 
+    graphics_update();
 
     // TODO single-step mode
     // TODO this is an idea, "powerups" that allow stuff like this
     // TODO     (single step for X seconds or X movements)
     snake->velocity = 0;
 
-    // XXX show cursor position (temp)
-    mvprintw(snake->head->y, snake->head->x, "X");
-
-    // TODO update snake position
-    // TODO graphics_update
+    // TODO cap to 60FPS (or X FPS)
   }
 
-  // unset modules
-  graphics_unset();
-  // TODO game_unset();
+quit:
+  _engine_stop();
 }
 
 /**
- * function:  stop
- * ---------------
+ * function:  engine_stop
+ * ----------------------
  * stops the game engine.
  */
-void stop(void)
+void engine_stop(void)
 {
-  // TODO
-  // TODO if game engine is running in its own thread:
-  // TODO   check if current thread is that thread
-  // TODO   if not, kill that thread
-  //is_engine_running = false;
+  // signal the engine to stop and wait for normal termination
+  do_tick = false;
 }

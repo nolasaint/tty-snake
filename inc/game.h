@@ -9,9 +9,23 @@
 #ifndef GAME_H
 #define GAME_H
 
+// snake display settings
+#define ENT_SNAKE_HEAD_CH   'X'
+#define ENT_SNAKE_HEAD_ATTR A_BOLD | A_STANDOUT | A_BLINK
+
+// food display settings
+#define ENT_FOOD_CH '•'
+#define ENT_FOOD_ATTR A_NORMAL
+
+// powerup durations (in seconds)
+#define PU_SINGLESTEP_DUR 30
+#define PU_NOGROW_DUR     30
+
 #include <global.h>
 
 /**
+ * enum:  velocity_t
+ * -----------------
  * TODO - Documentation
  */
 enum velocity_t
@@ -24,15 +38,33 @@ enum velocity_t
 };
 
 /**
+ * enum:  powerup_t
+ * ----------------
+ * TODO - Documentation
+ */
+enum powerup_t
+{
+  PU_NONE = 0,
+  PU_SINGLESTEP, //
+  PU_NOGROW,     //
+};
+
+/**
+ * struct:  ent_food
+ * -----------------
  * TODO - Documentation
  */
 struct ent_food
 {
   unsigned int x;
   unsigned int y;
+
+  enum powerup_t powerup;
 };
 
 /**
+ * struct:  ent_snake
+ * ------------------
  * TODO - Documentation
  */
 struct ent_snake
@@ -40,12 +72,15 @@ struct ent_snake
   unsigned int length;
 
   enum velocity_t velocity;
+  enum powerup_t  powerup;
 
   struct ent_snake_seg * head;
   struct ent_snake_seg * tail;
 };
 
 /**
+ * struct:  ent_snake_seg
+ * ----------------------
  * TODO - Documentation
  */
 struct ent_snake_seg
@@ -55,16 +90,17 @@ struct ent_snake_seg
   unsigned int x;
   unsigned int y;
 
-  struct ent_snake_seg * prev;
-  struct ent_snake_seg * next;
+  struct ent_snake_seg * prev; // NULL if head
+  struct ent_snake_seg * next; // NULL if tail
 };
 
 // Game area bounds
 extern unsigned int game_x_bound;
 extern unsigned int game_y_bound;
 
-// Player entity
-extern struct ent_snake * snake; // TODO: Const?
+// Entities TODO: const?
+extern struct ent_food  * food;
+extern struct ent_snake * snake;
 
 void game_setup(unsigned int init_x, unsigned int init_y);
 bool game_update(void);

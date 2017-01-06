@@ -13,7 +13,7 @@
 
 extern bool is_engine_running;
 
-void start(void);
-void stop(void);
+void engine_start(void);
+void engine_stop(void);
 
 #endif // ENGINE_H

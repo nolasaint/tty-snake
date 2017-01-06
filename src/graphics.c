@@ -15,6 +15,7 @@ bool is_graphics_setup = false; // graphics.h
 
 unsigned int game_x_bound; // game.h
 unsigned int game_y_bound; // game.h
+struct ent_snake * snake;  // game.h
 
 // global variables
 static int old_curs;
@@ -33,6 +34,7 @@ void graphics_setup(void)
     raw();
     keypad(stdscr, true);
     noecho();
+    cbreak();
     getmaxyx(stdscr, game_y_bound, game_x_bound);
 
     old_curs = curs_set(0);
@@ -43,11 +45,23 @@ void graphics_setup(void)
 // TODO - Documentation
 void graphics_update(void)
 {
+  struct ent_snake_seg * dead_seg = snake->tail;
+
   // TODO: check game state (game over? powerups?)
-  // TODO: erase dying segments from tail
-  // TODO:   start at tail, erase if dying, move to tail->prev, repeat
-  // TODO: draw new head
-  // TODO: draw new food if necessary
+
+  // erase dead segments from screen
+  while (dead_seg && dead_seg->dying)
+  {
+    mvdelch(dead_seg->y, dead_seg->x); // TODO maybe attributes + mvprintw?
+    dead_seg = dead_seg->prev;
+  }
+
+  // draw entities
+  // TODO maybe check if either entity has moved? how?
+  mvaddch(snake->head->y, snake->head->x, ENT_SNAKE_HEAD_CH|ENT_SNAKE_HEAD_ATTR);
+  // TODO check if food exists
+  // TODO saying this is a 'multi-character constant'
+  //mvaddch(food->y, food->x, ENT_FOOD_CH|ENT_FOOD_ATTR);
 }
 
 /**

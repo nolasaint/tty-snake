@@ -11,6 +11,7 @@
 #include <game.h>
 
 // external global variables
+struct ent_food  * food;
 struct ent_snake * snake;
 
 /**
@@ -23,10 +24,16 @@ struct ent_snake * snake;
  */
 void game_setup(unsigned int init_x, unsigned int init_y)
 {
+  food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
 
+  // we don't calloc since we have to initialize them anyway
   snake->head = malloc(sizeof(struct ent_snake_seg));
   snake->tail = malloc(sizeof(struct ent_snake_seg));
+
+  // check if allocations failed
+  if (!food || !snake || !snake->head || !snake->tail)
+    quit();
 
   *snake->head = (struct ent_snake_seg) {
     .dying = false,
@@ -36,26 +43,98 @@ void game_setup(unsigned int init_x, unsigned int init_y)
     .next  = NULL
   };
 
-  // snake initially only one segment long TODO configurable?
+  // snake initially only one segment long
   snake->tail   = snake->head;
   snake->length = 1;
 }
 
-// TODO - Documentation
+/**
+ * function:  game_update
+ * ----------------------
+ * TODO - Documentation
+ */
 bool game_update(void)
 {
-  // TODO
-  // TODO delete dying segments
-  // TODO update head
-  // TODO mark tail segment(s) dying
+  bool should_grow = false; // if true, tail not marked dying
+  int dx = 0, dy = 0;       // change in x and y cooridnates
+  struct ent_snake_seg * new_seg;
+
+  // free dying segments and remove from snake
+  while (snake->tail && snake->tail->dying)
+  {
+    struct ent_snake_seg * old_tail = snake->tail;
+    snake->tail = snake->tail->prev;
+
+    free(old_tail);
+  }
+
+  // TODO check if snake->tail was null (shouldn't happen so log it
+
+  // update head if snake is moving
+  if (snake->velocity != VEL_NONE)
+  {
+    switch (snake->velocity)
+    {
+      case VEL_UP:
+        dy = -1;
+        break;
+
+      case VEL_RIGHT:
+        dx = 1;
+        break;
+
+      case VEL_DOWN:
+        dy = 1;
+        break;
+
+     case VEL_LEFT:
+        dx = -1;
+        break;
+    }
+
+    // set up new_seg
+    new_seg = malloc(sizeof(struct ent_snake_seg));
+
+    // TODO check that malloc didn't fail
+    *new_seg = (struct ent_snake_seg) {
+      .dying = false,
+      .x     = snake->head->x + dx,
+      .y     = snake->head->y + dy,
+      .prev  = NULL,
+      .next  = snake->head
+    };
+
+    snake->head->prev = new_seg;
+    snake->head = new_seg;
+    snake->length++;
+
+    // TODO check if snake consumed food (free(food) if so, or return to pool)
+
+    // pop tail and mark dying if snake is not growing
+    if (!should_grow)
+    {
+      snake->tail->dying = true;
+      snake->length--;
+    }
+
+    // TODO check if game over (run into wall or tail)
+  }
+
+  return true;
 }
 
-// TODO - Documentation
+/**
+ * function:  game_unset
+ * ---------------------
+ * TODO - Documentation
+ */
 void game_unset(void)
 {
   struct ent_snake_seg * next_seg = snake->head;
 
-  // TODO free food if it exists
+  // free food if it exists
+  if (food)
+    free(food);
 
   // free memory allocated with malloc
   while (next_seg)

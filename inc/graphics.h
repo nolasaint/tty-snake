@@ -14,6 +14,7 @@
 extern bool is_graphics_setup;
 
 void graphics_setup(void);
+void graphics_update(void);
 void graphics_unset(void);
 
 #endif // GRAPHICS_H
