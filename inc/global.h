@@ -3,7 +3,7 @@
  *
  * globally-used functions, definitions, and imports.
  *
- * See COPYRIGHT for copyright information.
+ * See LICENSE for copyright information.
  */
 
 #ifndef GLOBAL_H

@@ -3,7 +3,7 @@
  *
  * tty-snake game engine.
  *
- * See COPYRIGHT for copyright information.
+ * See LICENSE for copyright information.
  */
 
 #ifndef ENGINE_H

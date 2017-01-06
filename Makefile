@@ -14,17 +14,21 @@ LDFLAGS := -lncurses -lpthread
 # define default target
 all: makedir tty-snake
 
+# define how all c files will compile
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEP)
 	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
 
+# primary compilation target
 tty-snake: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
+# display files used in compilation
 info:
 	@echo 'DEP = $(DEP)'
 	@echo 'SRC = $(SRC)'
 	@echo 'OBJ = $(OBJ)'
 
+# create the OBJ_DIR directory
 makedir:
 	mkdir -p $(OBJ_DIR)
 

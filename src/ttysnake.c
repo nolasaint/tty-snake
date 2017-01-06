@@ -1,24 +1,26 @@
 /**
- * tty-snake
+ * tty-snake - version 0.1
  *
  * a unix terminal-based 'snake' arcade game.
  *
- * 2 January 2017
- *
- * version 0.1
+ * See LICENSE for copyright information.
  */
 
 #include <signal.h> // signal(), SIGTERM
 #include <stdlib.h> // on_exit()
+#include <stdio.h>  // printf()
+
 #include <engine.h> // engine_start(), engine_stop()
 
 void sig_handler(int signum)
 {
+  printf("sig_handler\n");
   engine_stop();
 }
 
 void exit_handler(int ev, void * arg)
 {
+  printf("exit_handler\n");
   engine_stop();
 }
 

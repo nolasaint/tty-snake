@@ -3,7 +3,7 @@
  *
  * tty-snake game engine.
  *
- * See COPYRIGHT for copyright information.
+ * See LICENSE for copyright information.
  */
 
 #include <fcntl.h>   // XXX open()
@@ -62,7 +62,11 @@ static void _engine_stop(void)
 {
   // unset modules
   graphics_unset();
-  game_unset();
+
+// TODO: bug in game_unset, fix it tomorrow.
+//  game_unset();
+
+  printf("calling pthread_join\n");
 
   #ifdef USE_KB_LISTEN_THREAD
   // signal and wait for kb listen thread to stop
@@ -114,31 +118,32 @@ void engine_start(void)
       case KEY_UP:
       case 'w':
         snake->velocity = VEL_UP;
-        last_ch = -1;
         break;
 
       case KEY_RIGHT:
       case 'd':
         snake->velocity = VEL_RIGHT;
-        last_ch = -1;
         break;
 
       case KEY_DOWN:
       case 's':
         snake->velocity = VEL_DOWN;
-        last_ch = -1;
         break;
 
       case KEY_LEFT:
       case 'a':
         snake->velocity = VEL_LEFT;
-        last_ch = -1;
         break;
 
       // quit immediately
       case 'q':
+        printf("goin to quit:\n");
         goto quit;
     }
+
+#ifdef USE_KB_LISTEN_THREAD
+    last_ch = -1;
+#endif
 
     // TODO use update rates for game_update and graphics_update
 
@@ -155,6 +160,7 @@ void engine_start(void)
   }
 
 quit:
+  printf("calling _engine_stop()\n");
   _engine_stop();
 }
 

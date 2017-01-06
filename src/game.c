@@ -3,7 +3,7 @@
  *
  * tty-snake game module (provides game element definitions).
  *
- * See COPYRIGHT for copyright information.
+ * See LICENSE for copyright information.
  */
 
 #include <stdlib.h> // malloc()

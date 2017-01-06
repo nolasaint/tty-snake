@@ -3,7 +3,7 @@
  *
  * tty-snake graphics module.
  *
- * See COPYRIGHT for copyright information.
+ * See LICENSE for copyright information.
  */
 
 #ifndef GRAPHICS_H
