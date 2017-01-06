@@ -15,6 +15,7 @@ bool is_graphics_setup = false; // graphics.h
 
 unsigned int game_x_bound; // game.h
 unsigned int game_y_bound; // game.h
+struct ent_food  * food;   // game.h
 struct ent_snake * snake;  // game.h
 
 // global variables
@@ -59,6 +60,7 @@ void graphics_update(void)
   // draw entities
   // TODO maybe check if either entity has moved? how?
   mvaddch(snake->head->y, snake->head->x, ENT_SNAKE_HEAD_CH|ENT_SNAKE_HEAD_ATTR);
+
   // TODO check if food exists
   // TODO saying this is a 'multi-character constant'
   //mvaddch(food->y, food->x, ENT_FOOD_CH|ENT_FOOD_ATTR);

@@ -6,7 +6,7 @@
  * See LICENSE for copyright information.
  */
 
-#include <signal.h> // signal(), SIGTERM
+#include <signal.h> // signal(), SIGINT, SIGTERM
 #include <stdlib.h> // on_exit()
 #include <stdio.h>  // printf()
 
@@ -14,13 +14,11 @@
 
 void sig_handler(int signum)
 {
-  printf("sig_handler\n");
   engine_stop();
 }
 
 void exit_handler(int ev, void * arg)
 {
-  printf("exit_handler\n");
   engine_stop();
 }
 
@@ -33,9 +31,6 @@ void exit_handler(int ev, void * arg)
  * argv:  argument array
  *
  * returns: 0 on success, else 1.
- *
- * TODO: use on_exit() to set up graceful exit handler (call engine_stop())
- * TODO: implement graceful exit handler: exit_handler()
  */
 int main(int argc, char **argv)
 {
@@ -44,6 +39,8 @@ int main(int argc, char **argv)
   action.sa_handler = sig_handler;
 
   on_exit(exit_handler, NULL);
+
+  sigaction(SIGINT,  &action, NULL);
   sigaction(SIGTERM, &action, NULL);
 
   engine_start();

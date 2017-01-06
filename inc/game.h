@@ -70,6 +70,7 @@ struct ent_food
 struct ent_snake
 {
   unsigned int length;
+  // TODO powerup start timestamp
 
   enum velocity_t velocity;
   enum powerup_t  powerup;

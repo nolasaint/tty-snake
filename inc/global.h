@@ -27,10 +27,6 @@ typedef _Bool bool;
 
 // if defined, debugging output will be compiled
 #define DEBUG
-#define DEBUG_POS_Y    0
-#define DEBUG_VEL_Y    1
-#define DEBUG_ACTION_Y 2
-#define DEBUG_FREE_Y   3
 
 void quit(void);
 

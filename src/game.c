@@ -7,6 +7,7 @@
  */
 
 #include <stdlib.h> // malloc()
+#include <stdio.h>
 
 #include <game.h>
 
@@ -26,6 +27,9 @@ void game_setup(unsigned int init_x, unsigned int init_y)
 {
   food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
+
+  // XXX enable single step for right now
+  snake->powerup = PU_SINGLESTEP;
 
   // we don't calloc since we have to initialize them anyway
   snake->head = malloc(sizeof(struct ent_snake_seg));
@@ -63,7 +67,9 @@ bool game_update(void)
   while (snake->tail && snake->tail->dying)
   {
     struct ent_snake_seg * old_tail = snake->tail;
+
     snake->tail = snake->tail->prev;
+    snake->tail->next = NULL;
 
     free(old_tail);
   }
@@ -108,14 +114,27 @@ bool game_update(void)
     snake->head = new_seg;
     snake->length++;
 
-    // TODO check if snake consumed food (free(food) if so, or return to pool)
+    // check if snake consumed food (free(food) if so, or return to pool)
+    if (food && food->x == snake->head->x && food->y == snake->head->y)
+    {
+      should_grow = true;
+      snake->powerup = food->powerup;
+
+      free(food);
+    }
 
     // pop tail and mark dying if snake is not growing
-    if (!should_grow)
+    if (!should_grow && PU_NOGROW != snake->powerup)
     {
       snake->tail->dying = true;
       snake->length--;
     }
+
+    // TODO should powerup checks be separate from normal logic?
+
+    // check if single-step powerup is active
+    if (PU_SINGLESTEP == snake->powerup)
+      snake->velocity = VEL_NONE;
 
     // TODO check if game over (run into wall or tail)
   }

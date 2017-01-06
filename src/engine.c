@@ -46,7 +46,6 @@ static void * kb_listen(void * arg)
   while (do_kb_listen)
     last_ch = getch();
 
-  printf("kb_listen exiting\n");
   pthread_exit(NULL);
 }
 #endif // USE_KB_LISTEN_THREAD
@@ -62,11 +61,7 @@ static void _engine_stop(void)
 {
   // unset modules
   graphics_unset();
-
-// TODO: bug in game_unset, fix it tomorrow.
-//  game_unset();
-
-  printf("calling pthread_join\n");
+  game_unset();
 
   #ifdef USE_KB_LISTEN_THREAD
   // signal and wait for kb listen thread to stop
@@ -76,8 +71,6 @@ static void _engine_stop(void)
   #endif
 
   is_engine_running = false;
-
-  printf("exited with _engine_stop\n");
 }
 
 /**
@@ -150,11 +143,6 @@ void engine_start(void)
     // update entities and re-draw
     game_update(); 
     graphics_update();
-
-    // TODO single-step mode
-    // TODO this is an idea, "powerups" that allow stuff like this
-    // TODO     (single step for X seconds or X movements)
-    snake->velocity = 0;
 
     // TODO cap to 60FPS (or X FPS)
   }
