@@ -9,6 +9,7 @@
 #include <signal.h> // signal(), SIGINT, SIGTERM
 #include <stdlib.h> // on_exit()
 #include <stdio.h>  // printf()
+#include <time.h>   // time()
 
 #include <engine.h> // engine_start(), engine_stop()
 
@@ -42,6 +43,8 @@ int main(int argc, char **argv)
 
   sigaction(SIGINT,  &action, NULL);
   sigaction(SIGTERM, &action, NULL);
+
+  srand(time(NULL));
 
   engine_start();
 }

@@ -90,24 +90,21 @@ void engine_start(void)
   // set timeout so getch() is non-blocking
   timeout(0);
 
-  #ifdef USE_KB_LISTEN_THREAD
+#ifdef USE_KB_LISTEN_THREAD
   // start keyboard listening thread
   pthread_create(&kb_listen_threadid, NULL, kb_listen, NULL);
-  #endif
+#endif
 
   // engine tick
   while (do_tick)
   {
     // check for keyboard input
-    #ifdef USE_KB_LISTEN_THREAD
+#ifdef USE_KB_LISTEN_THREAD
     switch (last_ch)
-    #else
+#else
     switch (getch())
-    #endif
+#endif
     {
-      case ERR:
-        break;
-
       case KEY_UP:
       case 'w':
         snake->velocity = VEL_UP;
@@ -128,9 +125,12 @@ void engine_start(void)
         snake->velocity = VEL_LEFT;
         break;
 
+      // ignore getch() returning from timeout()
+      case ERR:
+        break;
+
       // quit immediately
       case 'q':
-        printf("goin to quit:\n");
         goto quit;
     }
 
@@ -148,7 +148,6 @@ void engine_start(void)
   }
 
 quit:
-  printf("calling _engine_stop()\n");
   _engine_stop();
 }
 

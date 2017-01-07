@@ -9,12 +9,15 @@
 #ifndef GAME_H
 #define GAME_H
 
+#define ARE_COLLIDING(ent_a,ent_b) \
+  ((ent_a)->x == (ent_b)->x && (ent_a)->y == (ent_b)->y)
+
 // snake display settings
 #define ENT_SNAKE_HEAD_CH   'X'
 #define ENT_SNAKE_HEAD_ATTR A_BOLD | A_STANDOUT | A_BLINK
 
 // food display settings
-#define ENT_FOOD_CH '•'
+#define ENT_FOOD_CH   'O' //'•'
 #define ENT_FOOD_ATTR A_NORMAL
 
 // powerup durations (in seconds)
@@ -56,6 +59,8 @@ enum powerup_t
  */
 struct ent_food
 {
+  bool consumed;
+
   unsigned int x;
   unsigned int y;
 

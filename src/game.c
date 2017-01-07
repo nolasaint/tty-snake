@@ -6,14 +6,37 @@
  * See LICENSE for copyright information.
  */
 
-#include <stdlib.h> // malloc()
-#include <stdio.h>
+#include <stdlib.h> // malloc(), rand()
 
 #include <game.h>
 
 // external global variables
 struct ent_food  * food;
 struct ent_snake * snake;
+
+/**
+ * function:  food_spawn
+ * ---------------------
+ * randomly place a food bit (potentially with powerup) on the board.
+ *
+ * allow_powerup: true if food can spawn with a powerup
+ */
+static void food_spawn(bool allow_powerup)
+{
+  unsigned int rand_x, rand_y;
+
+  do
+  {
+    // rand seeded in ttysnake.c:main
+    rand_x = rand() % game_x_bound; // TODO should be + 1 or no?
+    rand_y = rand() % game_y_bound;
+  } while (rand_x == snake->head->x && rand_y == snake->head->y);
+
+  // TODO spawn powerup if allowed (rare chance)
+
+  food->x = rand_x;
+  food->y = rand_y;
+}
 
 /**
  * function:  game_setup
@@ -27,9 +50,6 @@ void game_setup(unsigned int init_x, unsigned int init_y)
 {
   food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
-
-  // XXX enable single step for right now
-  snake->powerup = PU_SINGLESTEP;
 
   // we don't calloc since we have to initialize them anyway
   snake->head = malloc(sizeof(struct ent_snake_seg));
@@ -47,9 +67,15 @@ void game_setup(unsigned int init_x, unsigned int init_y)
     .next  = NULL
   };
 
+  // randomly place initial food piece
+  food_spawn(false);
+
   // snake initially only one segment long
   snake->tail   = snake->head;
   snake->length = 1;
+
+  // XXX for now, enable single-stepping mode
+  snake->powerup = PU_SINGLESTEP;
 }
 
 /**
@@ -101,7 +127,10 @@ bool game_update(void)
     // set up new_seg
     new_seg = malloc(sizeof(struct ent_snake_seg));
 
-    // TODO check that malloc didn't fail
+    // check if allocation failed
+    if (!new_seg)
+      quit();
+
     *new_seg = (struct ent_snake_seg) {
       .dying = false,
       .x     = snake->head->x + dx,
@@ -114,13 +143,13 @@ bool game_update(void)
     snake->head = new_seg;
     snake->length++;
 
-    // check if snake consumed food (free(food) if so, or return to pool)
-    if (food && food->x == snake->head->x && food->y == snake->head->y)
+    // check if snake consumed food
+    if (!food->consumed && ARE_COLLIDING(food, snake->head))
     {
-      should_grow = true;
-      snake->powerup = food->powerup;
+      should_grow    = true;
 
-      free(food);
+      food->consumed = true;
+      snake->powerup = food->powerup;
     }
 
     // pop tail and mark dying if snake is not growing

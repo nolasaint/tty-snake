@@ -10,7 +10,7 @@
 #define GLOBAL_H
 
 // compilation options
-#define USE_KB_LISTEN_THREAD
+//#define USE_KB_LISTEN_THREAD
 
 // generic definitions and typedefs
 #ifndef bool
