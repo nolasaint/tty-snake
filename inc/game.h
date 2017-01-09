@@ -13,8 +13,14 @@
   ((ent_a)->x == (ent_b)->x && (ent_a)->y == (ent_b)->y)
 
 // snake display settings
-#define ENT_SNAKE_HEAD_CH   'X'
-#define ENT_SNAKE_HEAD_ATTR A_BOLD | A_STANDOUT | A_BLINK
+#define ENT_SNAKE_CH        ' '
+#define ENT_SNAKE_ATTR      A_BOLD | A_STANDOUT
+
+#define ENT_SNAKE_HEAD_CH   ' '
+#define ENT_SNAKE_HEAD_ATTR A_BOLD | A_STANDOUT
+
+#define ENT_SNAKE_TAIL_CH   'T'
+#define ENT_SNAKE_TAIL_ATTR A_BOLD | A_STANDOUT
 
 // food display settings
 #define ENT_FOOD_CH   'O' //'•'

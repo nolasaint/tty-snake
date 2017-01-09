@@ -36,6 +36,8 @@ static void food_spawn(bool allow_powerup)
 
   food->x = rand_x;
   food->y = rand_y;
+
+  food->consumed = false;
 }
 
 /**
@@ -147,9 +149,17 @@ bool game_update(void)
     if (!food->consumed && ARE_COLLIDING(food, snake->head))
     {
       should_grow    = true;
-
       food->consumed = true;
-      snake->powerup = food->powerup;
+
+      // TODO if snake has powerup, don't spawn food with powerup
+      // TODO once this is done, we can remove the !snake->powerup check
+      // don't override current powerup
+      if (food->powerup)
+         snake->powerup = food->powerup;
+
+      // TODO eventually use milliseconds food respawn countdown
+      // XXX for now, immediately spawn new food
+      food_spawn((bool) !snake->powerup);
     }
 
     // pop tail and mark dying if snake is not growing

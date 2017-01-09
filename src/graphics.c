@@ -43,7 +43,11 @@ void graphics_setup(void)
   }
 }
 
-// TODO - Documentation
+/**
+ * function:  graphics_update
+ * --------------------------
+ * updates the on-screen graphics.
+ */
 void graphics_update(void)
 {
   struct ent_snake_seg * dead_seg = snake->tail;
@@ -53,7 +57,8 @@ void graphics_update(void)
   // erase dead segments from screen
   while (dead_seg && dead_seg->dying)
   {
-    mvdelch(dead_seg->y, dead_seg->x); // TODO maybe attributes + mvprintw?
+    // printw overwrites text, use it instead of delch()
+    mvprintw(dead_seg->y, dead_seg->x, " ");
     dead_seg = dead_seg->prev;
   }
 
@@ -62,7 +67,11 @@ void graphics_update(void)
   mvaddch(snake->head->y, snake->head->x, ENT_SNAKE_HEAD_CH|ENT_SNAKE_HEAD_ATTR);
 
   if (!food->consumed)
+  {
+    // TODO draw powerup attributes
+    // TODO use a switch/case and on default, use ent_food_attr
     mvaddch(food->y, food->x, ENT_FOOD_CH|ENT_FOOD_ATTR);
+  }
 }
 
 /**
