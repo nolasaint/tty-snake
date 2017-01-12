@@ -6,10 +6,12 @@
  * See LICENSE for copyright information.
  */
 
-#include <fcntl.h>   // XXX open()
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 #include <ncurses.h> // getch()
 #include <pthread.h> // pthread_create()
-#include <stdio.h>   // XXX printf()
 
 #include <game.h>
 #include <graphics.h>
@@ -80,6 +82,17 @@ static void _engine_stop(void)
  */
 void engine_start(void)
 {
+  const struct timespec ZERO_TS = {0};
+  const struct timespec MAX_ELAPSED_TS = {
+    .tv_sec  = MS2S(ENGINE_MS_PER_TICK),
+    .tv_nsec = MS2NS(ENGINE_MS_PER_TICK) - MS2NS(S2MS(MS2S(ENGINE_MS_PER_TICK)))
+  };
+
+  #ifdef DEBUG
+  //fprintf(stderr, "EFAULT = %d\nEINVAL = %d\nEPERM = %d\n", EFAULT,EINVAL,EPERM);
+  fprintf(stderr, "MAX_ELAPSED_TS is %d ms\n", TIMESPEC2MS(MAX_ELAPSED_TS));
+  #endif
+
   is_engine_running = true;
   do_tick           = true;
 
@@ -98,6 +111,17 @@ void engine_start(void)
   // engine tick
   while (do_tick)
   {
+    struct timespec elapsed_ts;
+
+    // reset process clock to avoid overflow / make math easier
+    int retval = clock_settime(CLOCK_PROCESS_CPUTIME_ID, &ZERO_TS);
+
+    #ifdef DEBUG
+    fprintf(stderr, "clock_settime returned %d\n", retval);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
+    fprintf(stderr, "CLOCK_PROCESS_CPUTIME_ID is %d ms approx\n", TIMESPEC2MS(elapsed_ts));
+    #endif
+
     // check for keyboard input
 #ifdef USE_KB_LISTEN_THREAD
     switch (last_ch)
@@ -144,7 +168,24 @@ void engine_start(void)
     game_update(); 
     graphics_update();
 
-    // TODO cap to 60FPS (or X FPS)
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
+
+    #ifdef DEBUG
+    fprintf(stderr, "%d ms elapsed\n", TIMESPEC2MS(elapsed_ts));
+    #endif
+
+    // sleep if less than ENGINE_MS_PER_TICK ms have elapsed
+    if (TIMESPEC2MS(elapsed_ts) < ENGINE_MS_PER_TICK)
+    {
+      // use elapsed_tp to store time we want to sleep for
+      ms2timespec(TIMESPEC2MS(MAX_ELAPSED_TS) - TIMESPEC2MS(elapsed_ts), &elapsed_ts);
+
+      #ifdef DEBUG
+      fprintf(stderr, "sleeping for %d ms\n", TIMESPEC2MS(elapsed_ts));
+      #endif
+
+      nanosleep(&elapsed_ts, NULL);
+    }
   }
 
 quit:

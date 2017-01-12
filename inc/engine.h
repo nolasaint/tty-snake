@@ -9,6 +9,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#define ENGINE_MS_PER_TICK 60
+
 #include <global.h>
 
 extern bool is_engine_running;

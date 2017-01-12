@@ -77,7 +77,7 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   snake->length = 1;
 
   // XXX for now, enable single-stepping mode
-  snake->powerup = PU_SINGLESTEP;
+  //snake->powerup = PU_SINGLESTEP;
 }
 
 /**
