@@ -27,6 +27,7 @@ struct ent_snake * snake;  // game.h
 
 // global variables
 static bool do_tick; // whether the engine should keep running
+
 #ifdef USE_KB_LISTEN_THREAD
 static int  last_ch; // most recently input key
 
@@ -46,7 +47,17 @@ static pthread_t kb_listen_threadid;  // id from pthread_create
 static void * kb_listen(void * arg)
 {
   while (do_kb_listen)
+  {
     last_ch = getch();
+
+    #ifdef DEBUG
+    fprintf(stderr, "[kb_listen] last_ch = %d\n", last_ch);
+    #endif
+  }
+
+  #ifdef DEBUG
+  fprintf(stderr, "[kb_listen] exiting\n");
+  #endif
 
   pthread_exit(NULL);
 }
@@ -65,15 +76,20 @@ static void _engine_stop(void)
   graphics_unset();
   game_unset();
 
-  #ifdef USE_KB_LISTEN_THREAD
+#ifdef USE_KB_LISTEN_THREAD
   // signal and wait for kb listen thread to stop
   do_kb_listen = false;
 
   pthread_join(kb_listen_threadid, NULL);
-  #endif
+#endif
 
   is_engine_running = false;
 }
+
+//static inline void tick(void)
+//{
+//
+//}
 
 /**
  * function:  engine_start
@@ -82,16 +98,8 @@ static void _engine_stop(void)
  */
 void engine_start(void)
 {
-  const struct timespec ZERO_TS = {0};
-  const struct timespec MAX_ELAPSED_TS = {
-    .tv_sec  = MS2S(ENGINE_MS_PER_TICK),
-    .tv_nsec = MS2NS(ENGINE_MS_PER_TICK) - MS2NS(S2MS(MS2S(ENGINE_MS_PER_TICK)))
-  };
-
-  #ifdef DEBUG
-  //fprintf(stderr, "EFAULT = %d\nEINVAL = %d\nEPERM = %d\n", EFAULT,EINVAL,EPERM);
-  fprintf(stderr, "MAX_ELAPSED_TS is %d ms\n", TIMESPEC2MS(MAX_ELAPSED_TS));
-  #endif
+  // convert (ticks per second) to (ns per tick)
+  const uint64_t MAX_ELAPSED_NS = (1 / (float)ENGINE_TICKRATE) * SECONDS;
 
   is_engine_running = true;
   do_tick           = true;
@@ -100,31 +108,21 @@ void engine_start(void)
   graphics_setup(); // does ncurses initialization
   game_setup(game_x_bound / 2, game_y_bound / 2);
 
-  // set timeout so getch() is non-blocking
-  timeout(0);
-
 #ifdef USE_KB_LISTEN_THREAD
   // start keyboard listening thread
   pthread_create(&kb_listen_threadid, NULL, kb_listen, NULL);
+#else
+  // set timeout so getch() is non-blocking
+  timeout(0);
 #endif
 
   // engine tick
   while (do_tick)
   {
-    struct timespec elapsed_ts,
-                    start_ts,
-                    end_ts;
-
-    // reset process clock to avoid overflow / make math easier
-//    int retval = clock_settime(CLOCK_PROCESS_CPUTIME_ID, &ZERO_TS);
+    struct timespec start_ts, end_ts;
+    nanosecond_t    elapsed_ns;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_ts);
-
-//    #ifdef DEBUG
-//    fprintf(stderr, "clock_settime returned %d\n", retval);
-//    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
-//    fprintf(stderr, "CLOCK_PROCESS_CPUTIME_ID is %d ms approx\n", TIMESPEC2MS(elapsed_ts));
-//    #endif
 
     // check for keyboard input
 #ifdef USE_KB_LISTEN_THREAD
@@ -172,33 +170,23 @@ void engine_start(void)
     game_update(); 
     graphics_update();
 
-//    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
-//
-//    #ifdef DEBUG
-//    fprintf(stderr, "%d ms elapsed\n", TIMESPEC2MS(elapsed_ts));
-//    #endif
-
+    // limit engine tickrate
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_ts);
 
-    int max_ms   = TIMESPEC2MS(MAX_ELAPSED_TS),
-        start_ms = TIMESPEC2MS(start_ts),
-        end_ms   = TIMESPEC2MS(end_ts);
+    elapsed_ns = TIMESPEC2NS(end_ts) - TIMESPEC2NS(start_ts);
 
-    // sleep if less than ENGINE_MS_PER_TICK ms have elapsed
-//    if (TIMESPEC2MS(elapsed_ts) < ENGINE_MS_PER_TICK)
-    if (end_ms - start_ms < ENGINE_MS_PER_TICK)
+    // sleep if less than MAX_ELAPSED_NS ns have elapsed
+    if (elapsed_ns < MAX_ELAPSED_NS)
     {
-      // use elapsed_tp to store time we want to sleep for
-//      ms2timespec(TIMESPEC2MS(MAX_ELAPSED_TS) - TIMESPEC2MS(elapsed_ts), &elapsed_ts);
-//      #ifdef DEBUG
-//      fprintf(stderr, "sleeping for %d ms\n", TIMESPEC2MS(elapsed_ts));
-//      #endif
-//      nanosleep(&elapsed_ts, NULL);
+      ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &end_ts);
 
-      ms2timespec(max_ms - (end_ms - start_ms), &end_ts);
+#ifdef DEBUG
+      fprintf(stderr, "sleeping for %d ns\n", MAX_ELAPSED_NS - elapsed_ns);
+#endif
+
       nanosleep(&end_ts, NULL);
     }
-  }
+  } // end of tick loop
 
 quit:
   _engine_stop();

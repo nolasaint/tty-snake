@@ -11,17 +11,17 @@
 #include <global.h>
 
 /**
- * function:  ms2timespec
+ * function:  ns2timespec
  * ----------------------
  * TODO - documentation
  */
-inline void ms2timespec(long ms, struct timespec *ts)
+inline void ns2timespec(nanosecond_t ns, struct timespec *ts)
 {
   // avoid segmentation faults
   if (ts)
   {
-    ts->tv_sec  = MS2S(ms);
-    ts->tv_nsec = MS2NS(ms) - MS2NS(S2MS((ts->tv_sec)));
+    ts->tv_sec  = ns / SECONDS;
+    ts->tv_nsec = ns % SECONDS;
   }
 }
 
