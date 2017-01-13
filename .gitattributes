@@ -1,0 +1,2 @@
+# ensure all header files recognized as C language files
+*.h linguist-language=C
