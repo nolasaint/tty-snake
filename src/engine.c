@@ -111,16 +111,20 @@ void engine_start(void)
   // engine tick
   while (do_tick)
   {
-    struct timespec elapsed_ts;
+    struct timespec elapsed_ts,
+                    start_ts,
+                    end_ts;
 
     // reset process clock to avoid overflow / make math easier
-    int retval = clock_settime(CLOCK_PROCESS_CPUTIME_ID, &ZERO_TS);
+//    int retval = clock_settime(CLOCK_PROCESS_CPUTIME_ID, &ZERO_TS);
 
-    #ifdef DEBUG
-    fprintf(stderr, "clock_settime returned %d\n", retval);
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
-    fprintf(stderr, "CLOCK_PROCESS_CPUTIME_ID is %d ms approx\n", TIMESPEC2MS(elapsed_ts));
-    #endif
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_ts);
+
+//    #ifdef DEBUG
+//    fprintf(stderr, "clock_settime returned %d\n", retval);
+//    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
+//    fprintf(stderr, "CLOCK_PROCESS_CPUTIME_ID is %d ms approx\n", TIMESPEC2MS(elapsed_ts));
+//    #endif
 
     // check for keyboard input
 #ifdef USE_KB_LISTEN_THREAD
@@ -168,23 +172,31 @@ void engine_start(void)
     game_update(); 
     graphics_update();
 
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
+//    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &elapsed_ts);
+//
+//    #ifdef DEBUG
+//    fprintf(stderr, "%d ms elapsed\n", TIMESPEC2MS(elapsed_ts));
+//    #endif
 
-    #ifdef DEBUG
-    fprintf(stderr, "%d ms elapsed\n", TIMESPEC2MS(elapsed_ts));
-    #endif
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_ts);
+
+    int max_ms   = TIMESPEC2MS(MAX_ELAPSED_TS),
+        start_ms = TIMESPEC2MS(start_ts),
+        end_ms   = TIMESPEC2MS(end_ts);
 
     // sleep if less than ENGINE_MS_PER_TICK ms have elapsed
-    if (TIMESPEC2MS(elapsed_ts) < ENGINE_MS_PER_TICK)
+//    if (TIMESPEC2MS(elapsed_ts) < ENGINE_MS_PER_TICK)
+    if (end_ms - start_ms < ENGINE_MS_PER_TICK)
     {
       // use elapsed_tp to store time we want to sleep for
-      ms2timespec(TIMESPEC2MS(MAX_ELAPSED_TS) - TIMESPEC2MS(elapsed_ts), &elapsed_ts);
+//      ms2timespec(TIMESPEC2MS(MAX_ELAPSED_TS) - TIMESPEC2MS(elapsed_ts), &elapsed_ts);
+//      #ifdef DEBUG
+//      fprintf(stderr, "sleeping for %d ms\n", TIMESPEC2MS(elapsed_ts));
+//      #endif
+//      nanosleep(&elapsed_ts, NULL);
 
-      #ifdef DEBUG
-      fprintf(stderr, "sleeping for %d ms\n", TIMESPEC2MS(elapsed_ts));
-      #endif
-
-      nanosleep(&elapsed_ts, NULL);
+      ms2timespec(max_ms - (end_ms - start_ms), &end_ts);
+      nanosleep(&end_ts, NULL);
     }
   }
 
