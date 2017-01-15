@@ -7,6 +7,7 @@
 ### TO-DO
 
 * implement rates for game_update, graphics_update
+  * use the same strategy for these as we do for the engine tickrate limiter
 
 * rarely, randomly choose a powerup for newly-spawning food
 
