@@ -8,6 +8,7 @@
 
 #ifndef ENGINE_H
 #define ENGINE_H
+
 #define ENGINE_TICKRATE 30 // max ticks per second
 
 #include <global.h>

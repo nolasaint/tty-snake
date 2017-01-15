@@ -155,16 +155,21 @@ void engine_start(void)
       case ERR:
         break;
 
+      case PAUSE_KEY:
+        // TODO add pause functionality
+        // TODO is_paused = true;
+        // TODO check is_paused before input, or any updates
+        // TODO but let engine still tick
+        break;
+
       // quit immediately
-      case 'q':
+      case QUIT_KEY:
         goto quit;
     }
 
 #ifdef USE_KB_LISTEN_THREAD
     last_ch = -1;
 #endif
-
-    // TODO use update rates for game_update and graphics_update
 
     // update entities and re-draw
     game_update(); 
@@ -179,11 +184,6 @@ void engine_start(void)
     if (elapsed_ns < MAX_ELAPSED_NS)
     {
       ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &end_ts);
-
-#ifdef DEBUG
-      fprintf(stderr, "sleeping for %d ns\n", MAX_ELAPSED_NS - elapsed_ns);
-#endif
-
       nanosleep(&end_ts, NULL);
     }
   } // end of tick loop
