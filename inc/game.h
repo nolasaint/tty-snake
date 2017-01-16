@@ -106,6 +106,9 @@ struct ent_snake_seg
   struct ent_snake_seg * next; // NULL if tail
 };
 
+// Game status
+extern bool is_game_over;
+
 // Game area bounds
 extern unsigned int game_x_bound;
 extern unsigned int game_y_bound;

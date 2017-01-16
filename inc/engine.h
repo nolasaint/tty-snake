@@ -11,6 +11,9 @@
 
 #define ENGINE_TICKRATE 30 // max ticks per second
 
+#define PAUSE_KEY 'p'
+#define QUIT_KEY  'q'
+
 #include <global.h>
 
 extern bool is_engine_running;

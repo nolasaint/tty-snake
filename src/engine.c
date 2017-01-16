@@ -19,11 +19,12 @@
 #include <engine.h>
 
 // external global variables
-bool is_engine_running;  // engine.h
+bool is_engine_running;     // engine.h
 
-unsigned int game_x_bound; // game.h
-unsigned int game_y_bound; // game.h
-struct ent_snake * snake;  // game.h
+bool is_game_over;          // game.h
+unsigned int game_x_bound;
+unsigned int game_y_bound;
+struct ent_snake * snake;
 
 // global variables
 static bool do_tick; // whether the engine should keep running
@@ -116,8 +117,9 @@ void engine_start(void)
   timeout(0);
 #endif
 
+  // TODO maybe we should just break on is_game_over
   // engine tick
-  while (do_tick)
+  while (do_tick && !is_game_over)
   {
     struct timespec start_ts, end_ts;
     nanosecond_t    elapsed_ns;
@@ -172,7 +174,7 @@ void engine_start(void)
 #endif
 
     // update entities and re-draw
-    game_update(); 
+    game_update();
     graphics_update();
 
     // limit engine tickrate

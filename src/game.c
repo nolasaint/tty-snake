@@ -11,8 +11,13 @@
 #include <game.h>
 
 // external global variables
+bool is_game_over;
 struct ent_food  * food;
 struct ent_snake * snake;
+
+// global variables
+// TODO: this uses a lot of memory, testing component-based checks first
+// static bool collision_map[][];
 
 /**
  * function:  food_spawn
@@ -50,6 +55,8 @@ static void food_spawn(bool allow_powerup)
  */
 void game_setup(unsigned int init_x, unsigned int init_y)
 {
+  is_game_over = false;
+
   food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
 
@@ -75,9 +82,6 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   // snake initially only one segment long
   snake->tail   = snake->head;
   snake->length = 1;
-
-  // XXX for now, enable single-stepping mode
-  //snake->powerup = PU_SINGLESTEP;
 }
 
 /**
@@ -87,8 +91,9 @@ void game_setup(unsigned int init_x, unsigned int init_y)
  */
 bool game_update(void)
 {
-  bool should_grow = false; // if true, tail not marked dying
-  int dx = 0, dy = 0;       // change in x and y cooridnates
+  bool   is_colliding = false,
+         should_grow = false;   // if true, tail not marked dying
+  int    dx = 0, dy = 0;        // change in x and y cooridnates
   struct ent_snake_seg * new_seg;
 
   // free dying segments and remove from snake
@@ -169,13 +174,32 @@ bool game_update(void)
       snake->length--;
     }
 
+    // collision detection: ent_snake segments
+    if (snake->length > 1)
+    {
+      struct ent_snake_seg * check_seg = snake->head->next;
+
+      while (check_seg && !check_seg->dying)
+      {
+        if (ARE_COLLIDING(snake->head, check_seg))
+        {
+          is_colliding = true;
+          break;
+        }
+
+        check_seg = check_seg->next;
+      }
+    }
+
     // TODO should powerup checks be separate from normal logic?
 
     // check if single-step powerup is active
     if (PU_SINGLESTEP == snake->powerup)
       snake->velocity = VEL_NONE;
 
-    // TODO check if game over (run into wall or tail)
+    // TODO other ways to lose / win?
+    // check if game is over
+    is_game_over = is_colliding;
   }
 
   return true;
