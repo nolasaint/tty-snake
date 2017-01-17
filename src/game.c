@@ -12,6 +12,7 @@
 
 // external global variables
 bool is_game_over;
+bool is_game_paused;
 struct ent_food  * food;
 struct ent_snake * snake;
 
@@ -33,11 +34,17 @@ static void food_spawn(bool allow_powerup)
   do
   {
     // rand seeded in ttysnake.c:main
-    rand_x = rand() % game_x_bound; // TODO should be + 1 or no?
+    rand_x = rand() % game_x_bound;
     rand_y = rand() % game_y_bound;
   } while (rand_x == snake->head->x && rand_y == snake->head->y);
 
-  // TODO spawn powerup if allowed (rare chance)
+  // TODO use configurable powerup spawning rarity
+  // TODO use individual powerup rarities
+  // rarely, spawn powerup (if allowed)
+  if (allow_powerup && rand() > 5)
+  {
+    food->powerup = PU_SINGLESTEP;
+  }
 
   food->x = rand_x;
   food->y = rand_y;

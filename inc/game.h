@@ -54,8 +54,9 @@ enum velocity_t
 enum powerup_t
 {
   PU_NONE = 0,
-  PU_SINGLESTEP, //
-  PU_NOGROW,     //
+  PU_SINGLESTEP,
+  PU_NOGROW,
+  PU_COUNT       // Simply stores the number of powerup_t items
 };
 
 /**
@@ -108,6 +109,7 @@ struct ent_snake_seg
 
 // Game status
 extern bool is_game_over;
+extern bool is_game_paused;
 
 // Game area bounds
 extern unsigned int game_x_bound;
