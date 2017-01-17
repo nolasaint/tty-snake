@@ -21,22 +21,16 @@ struct ent_snake * snake;
 // static bool collision_map[][];
 static unsigned int powerup_durations[PU_COUNT];
 
+/**
+ * function: powerup_init
+ * ----------------------
+ * TODO: Documentation
+ */
 static void powerup_init(void)
 {
   // initialize powerup durations
   powerup_durations[PU_SINGLESTEP] = PU_SINGLESTEP_DUR;
   powerup_durations[PU_NOGROW]     = PU_NOGROW_DUR;
-}
-
-/**
- * function: snake_set_powerup
- * ---------------------------
- * TODO: Documentation
- */
-static void snake_set_powerup(enum powerup_t powerup)
-{
-  // TODO
-  return;
 }
 
 /**
@@ -70,10 +64,10 @@ static void food_spawn(bool allow_powerup)
     rand_y = rand() % game_y_bound;
   } while (rand_x == snake->head->x && rand_y == snake->head->y);
 
-  // TODO use configurable powerup spawning rarity
-  // TODO use individual powerup rarities
+  food->powerup = PU_NONE;
+
   // rarely, spawn powerup (if allowed)
-  if (allow_powerup && (rand() % 100) <= PU_SPAWN_PERCENTAGE)
+  if (allow_powerup && rand() <= PU_SPAWN_PERCENTAGE)
     food->powerup = rand_powerup();
 
   food->x = rand_x;
@@ -209,7 +203,8 @@ bool game_update(void)
 
       // TODO eventually use milliseconds food respawn countdown
       // XXX for now, immediately spawn new food
-      food_spawn((bool) !snake->powerup);
+      //food_spawn((bool) !snake->powerup);
+      food_spawn(true);
     }
 
     // pop tail and mark dying if snake is not growing
