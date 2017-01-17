@@ -14,6 +14,7 @@
 
 #include <engine.h> // engine_start(), engine_stop()
 
+#ifdef DEBUG
 static void test_timespec_conversions(void)
 {
   const struct timespec GOOD_TS = {
@@ -45,6 +46,7 @@ static void test_timespec_conversions(void)
   test_ns = TIMESPEC2NS(test_ts);
   assert(GOOD_NS != test_ns);
 }
+#endif // DEBUG
 
 void sig_handler(int signum)
 {
@@ -83,8 +85,10 @@ int main(int argc, char **argv)
   // configure interrupt handlers
   setup_handlers();
 
+#ifdef DEBUG
   // test assertions
   test_timespec_conversions();
+#endif // DEBUG
 
   // seed the randomizer
   srand(time(NULL));

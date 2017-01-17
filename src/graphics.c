@@ -70,7 +70,29 @@ void graphics_update(void)
   {
     // TODO draw powerup attributes
     // TODO use a switch/case and on default, use ent_food_attr
-    mvaddch(food->y, food->x, ENT_FOOD_CH|ENT_FOOD_ATTR);
+
+    char food_display_char;
+
+    switch (food->powerup)
+    {
+      case PU_SINGLESTEP:
+        // TODO
+        food_display_char = 'S' | ENT_FOOD_ATTR;
+        break;
+
+      case PU_NOGROW:
+        // TODO
+        food_display_char = 'N' | ENT_FOOD_ATTR;
+        break; 
+
+      // PU_NONE, other non-valid states
+      default:
+        food_display_char = ENT_FOOD_CH | ENT_FOOD_ATTR;
+        break;
+    }
+
+    //mvaddch(food->y, food->x, ENT_FOOD_CH|ENT_FOOD_ATTR);
+    mvaddch(food->y, food->x, food_display_char);
   }
 }
 

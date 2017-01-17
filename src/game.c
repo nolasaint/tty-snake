@@ -21,6 +21,19 @@ struct ent_snake * snake;
 // static bool collision_map[][];
 
 /**
+ * function: rand_powerup
+ * ----------------------
+ * returns a random powerup_t based on pre-defined probabilities.
+ *
+ * returns: a randomly-selected powerup
+ */
+static enum powerup_t rand_powerup()
+{
+  // TODO use probabilities
+  return (enum powerup_t)(rand() % PU_COUNT);
+}
+
+/**
  * function:  food_spawn
  * ---------------------
  * randomly place a food bit (potentially with powerup) on the board.
@@ -42,7 +55,7 @@ static void food_spawn(bool allow_powerup)
   // TODO use individual powerup rarities
   // rarely, spawn powerup (if allowed)
   if (allow_powerup && (rand() % 100) <= PU_SPAWN_PERCENTAGE)
-    food->powerup = PU_SINGLESTEP;
+    food->powerup = rand_powerup();
 
   food->x = rand_x;
   food->y = rand_y;
@@ -72,6 +85,8 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   // check if allocations failed
   if (!food || !snake || !snake->head || !snake->tail)
     quit();
+
+  snake->powerup = PU_NONE;
 
   *snake->head = (struct ent_snake_seg) {
     .dying = false,
@@ -164,7 +179,7 @@ bool game_update(void)
       // TODO if snake has powerup, don't spawn food with powerup
       // TODO once this is done, we can remove the !snake->powerup check
       // don't override current powerup
-      if (food->powerup)
+      if (PU_NONE != food->powerup)
          snake->powerup = food->powerup;
 
       // TODO eventually use milliseconds food respawn countdown
@@ -173,7 +188,7 @@ bool game_update(void)
     }
 
     // pop tail and mark dying if snake is not growing
-    if (!should_grow && PU_NOGROW != snake->powerup)
+    if (!should_grow || PU_NOGROW == snake->powerup)
     {
       snake->tail->dying = true;
       snake->length--;

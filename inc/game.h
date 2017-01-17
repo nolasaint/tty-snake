@@ -56,7 +56,7 @@ enum velocity_t
  */
 enum powerup_t
 {
-  PU_NONE = 0,
+  PU_NONE = -1,
   PU_SINGLESTEP,
   PU_NOGROW,
   PU_COUNT       // Simply stores the number of powerup_t items
