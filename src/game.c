@@ -19,6 +19,25 @@ struct ent_snake * snake;
 // global variables
 // TODO: this uses a lot of memory, testing component-based checks first
 // static bool collision_map[][];
+static unsigned int powerup_durations[PU_COUNT];
+
+static void powerup_init(void)
+{
+  // initialize powerup durations
+  powerup_durations[PU_SINGLESTEP] = PU_SINGLESTEP_DUR;
+  powerup_durations[PU_NOGROW]     = PU_NOGROW_DUR;
+}
+
+/**
+ * function: snake_set_powerup
+ * ---------------------------
+ * TODO: Documentation
+ */
+static void snake_set_powerup(enum powerup_t powerup)
+{
+  // TODO
+  return;
+}
 
 /**
  * function: rand_powerup
@@ -27,7 +46,7 @@ struct ent_snake * snake;
  *
  * returns: a randomly-selected powerup
  */
-static enum powerup_t rand_powerup()
+static enum powerup_t rand_powerup(void)
 {
   // TODO use probabilities
   return (enum powerup_t)(rand() % PU_COUNT);
@@ -73,6 +92,9 @@ static void food_spawn(bool allow_powerup)
  */
 void game_setup(unsigned int init_x, unsigned int init_y)
 {
+  // call other initialization functions
+  powerup_init();
+
   is_game_over = false;
 
   food  = calloc(1, sizeof(struct ent_food));
@@ -86,8 +108,6 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   if (!food || !snake || !snake->head || !snake->tail)
     quit();
 
-  snake->powerup = PU_NONE;
-
   *snake->head = (struct ent_snake_seg) {
     .dying = false,
     .x     = init_x,
@@ -100,8 +120,10 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   food_spawn(false);
 
   // snake initially only one segment long
-  snake->tail   = snake->head;
-  snake->length = 1;
+  snake->tail    = snake->head;
+  snake->length  = 1;
+
+  snake->powerup = PU_NONE;
 }
 
 /**
@@ -126,8 +148,6 @@ bool game_update(void)
 
     free(old_tail);
   }
-
-  // TODO check if snake->tail was null (shouldn't happen so log it
 
   // update head if snake is moving
   if (snake->velocity != VEL_NONE)
@@ -170,6 +190,8 @@ bool game_update(void)
     snake->head = new_seg;
     snake->length++;
 
+    // TODO check if powerup timer runs out (use powerup_durations array)
+
     // check if snake consumed food
     if (!food->consumed && ARE_COLLIDING(food, snake->head))
     {
@@ -180,7 +202,10 @@ bool game_update(void)
       // TODO once this is done, we can remove the !snake->powerup check
       // don't override current powerup
       if (PU_NONE != food->powerup)
-         snake->powerup = food->powerup;
+      {
+        snake->powerup = food->powerup;
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &snake->powerup_start_ts);
+      }
 
       // TODO eventually use milliseconds food respawn countdown
       // XXX for now, immediately spawn new food

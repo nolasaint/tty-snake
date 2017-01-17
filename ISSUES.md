@@ -6,6 +6,10 @@
   * snake movement becomes buggy
   * have to handle signals/interrupts inside pthread so that exiting does not require extra input
 
+#### Powerups
+
+* powerups spawn far too frequently, check logic in food_spawn
+
 ### TO-DO
 
 #### Engine
