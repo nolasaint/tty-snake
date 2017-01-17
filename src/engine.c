@@ -135,22 +135,26 @@ void engine_start(void)
     {
       case KEY_UP:
       case 'w':
-        snake->velocity = VEL_UP;
+        if (snake->velocity != VEL_DOWN)
+          snake->velocity = VEL_UP;
         break;
 
       case KEY_RIGHT:
       case 'd':
-        snake->velocity = VEL_RIGHT;
+        if (snake->velocity != VEL_LEFT)
+          snake->velocity = VEL_RIGHT;
         break;
 
       case KEY_DOWN:
       case 's':
-        snake->velocity = VEL_DOWN;
+        if (snake->velocity != VEL_UP)
+          snake->velocity = VEL_DOWN;
         break;
 
       case KEY_LEFT:
       case 'a':
-        snake->velocity = VEL_LEFT;
+        if (snake->velocity != VEL_RIGHT)
+          snake->velocity = VEL_LEFT;
         break;
 
       // ignore getch() returning from timeout()

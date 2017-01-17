@@ -6,13 +6,13 @@
 
 ### TO-DO
 
-* implement rates for game_update, graphics_update
+* (EVENTUALLY) implement rates for game_update, graphics_update
   * use the same strategy for these as we do for the engine tickrate limiter
 
 * rarely, randomly choose a powerup for newly-spawning food
 
 * display food with powerups differently
 
-* add collision map (2D bool array with an entry for each coordinate)
+* (PROBABLY NOT HAPPENING) add collision map (2D bool array with an entry for each coordinate)
 
-* add collision detection
+* when single-step powerup is active, disallow backtracking by checking the previous velocity

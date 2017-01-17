@@ -41,10 +41,8 @@ static void food_spawn(bool allow_powerup)
   // TODO use configurable powerup spawning rarity
   // TODO use individual powerup rarities
   // rarely, spawn powerup (if allowed)
-  if (allow_powerup && rand() > 5)
-  {
+  if (allow_powerup && (rand() % 100) <= PU_SPAWN_PERCENTAGE)
     food->powerup = PU_SINGLESTEP;
-  }
 
   food->x = rand_x;
   food->y = rand_y;

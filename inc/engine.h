@@ -9,7 +9,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#define ENGINE_TICKRATE 30 // max ticks per second
+#define ENGINE_TICKRATE 25 // max ticks per second
 
 #define PAUSE_KEY 'p'
 #define QUIT_KEY  'q'
