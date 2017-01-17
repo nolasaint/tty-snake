@@ -1,4 +1,4 @@
-### KNOWN BUGS
+## KNOWN BUGS
 
 #### Keyboard Input
 
@@ -10,7 +10,7 @@
 
 * powerups spawn far too frequently, check logic in food_spawn
 
-### TO-DO
+## TO-DO
 
 #### Engine
 
