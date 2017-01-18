@@ -27,11 +27,11 @@
 #define ENT_FOOD_ATTR A_NORMAL
 
 // average # of powerups per 100 food spawns
-#define PU_SPAWN_PERCENTAGE 10
+#define PU_SPAWN_PERCENTAGE 100
 
 // powerup durations (in seconds)
-#define PU_SINGLESTEP_DUR 30
-#define PU_NOGROW_DUR     30
+#define PU_SINGLESTEP_DUR 10//30
+#define PU_NOGROW_DUR     10//30
 
 #include <global.h>
 

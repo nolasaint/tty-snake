@@ -67,7 +67,7 @@ static void food_spawn(bool allow_powerup)
   food->powerup = PU_NONE;
 
   // rarely, spawn powerup (if allowed)
-  if (allow_powerup && rand() <= PU_SPAWN_PERCENTAGE)
+  if (allow_powerup && (rand() % 100) <= PU_SPAWN_PERCENTAGE)
     food->powerup = rand_powerup();
 
   food->x = rand_x;
@@ -128,9 +128,12 @@ void game_setup(unsigned int init_x, unsigned int init_y)
 bool game_update(void)
 {
   bool   is_colliding = false,
-         should_grow = false;   // if true, tail not marked dying
-  int    dx = 0, dy = 0;        // change in x and y cooridnates
+         should_grow  = false;    // if true, tail not marked dying
+  int    dx = 0, dy = 0;          // change in x and y cooridnates
   struct ent_snake_seg * new_seg;
+  struct timespec        now_ts;
+
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now_ts);
 
   // free dying segments and remove from snake
   while (snake->tail && snake->tail->dying)
@@ -184,7 +187,23 @@ bool game_update(void)
     snake->head = new_seg;
     snake->length++;
 
-    // TODO check if powerup timer runs out (use powerup_durations array)
+    // check if powerup timer runs out (use powerup_durations array)
+    if (PU_NONE != snake->powerup)
+    {
+      nanosecond_t alivetime = (
+        TIMESPEC2NS(now_ts) - TIMESPEC2NS(snake->powerup_start_ts)
+      );
+
+#ifdef DEBUG
+      mvprintw(0,0,"pu_spawntime: %lu ns\n",TIMESPEC2NS(snake->powerup_start_ts));
+      mvprintw(1,0,"now_ts:       %lu ns\n",TIMESPEC2NS(now_ts));
+      mvprintw(2,0,"alivetime:    %lu ns\n",alivetime);
+      mvprintw(3,0,"duration:     %lu ns\n",(nanosecond_t)powerup_durations[snake->powerup] * SECONDS);
+#endif
+
+      if (alivetime >= powerup_durations[snake->powerup] * SECONDS)
+        snake->powerup = PU_NONE;
+    }
 
     // check if snake consumed food
     if (!food->consumed && ARE_COLLIDING(food, snake->head))
@@ -192,8 +211,6 @@ bool game_update(void)
       should_grow    = true;
       food->consumed = true;
 
-      // TODO if snake has powerup, don't spawn food with powerup
-      // TODO once this is done, we can remove the !snake->powerup check
       // don't override current powerup
       if (PU_NONE != food->powerup)
       {
@@ -202,7 +219,7 @@ bool game_update(void)
       }
 
       // TODO eventually use milliseconds food respawn countdown
-      // XXX for now, immediately spawn new food
+      // TODO don't allow powerups to spawn if one is already active
       //food_spawn((bool) !snake->powerup);
       food_spawn(true);
     }
