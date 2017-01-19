@@ -35,7 +35,7 @@ typedef _Bool bool;
  */
 
 // System clock used by clock_gettime
-#define CLOCK_ID CLOCK_PROCESS_CPUTIME_ID
+#define CLOCK_ID CLOCK_MONOTONIC_RAW//CLOCK_PROCESS_CPUTIME_ID
 
 typedef uint64_t nanosecond_t;
 typedef uint64_t millisecond_t;

@@ -19,7 +19,7 @@ struct ent_snake * snake;
 // global variables
 // TODO: this uses a lot of memory, testing component-based checks first
 // static bool collision_map[][];
-static unsigned int powerup_durations[PU_COUNT];
+static nanosecond_t powerup_durations[PU_COUNT];
 
 /**
  * function: powerup_init
