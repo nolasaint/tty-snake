@@ -124,7 +124,7 @@ void engine_start(void)
     struct timespec start_ts, end_ts;
     nanosecond_t    elapsed_ns;
 
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_ts);
+    clock_gettime(CLOCK_ID, &start_ts);
 
     // check for keyboard input
 #ifdef USE_KB_LISTEN_THREAD
@@ -182,7 +182,7 @@ void engine_start(void)
     graphics_update();
 
     // limit engine tickrate
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_ts);
+    clock_gettime(CLOCK_ID, &end_ts);
 
     elapsed_ns = TIMESPEC2NS(end_ts) - TIMESPEC2NS(start_ts);
 

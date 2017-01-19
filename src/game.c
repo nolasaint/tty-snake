@@ -133,7 +133,7 @@ bool game_update(void)
   struct ent_snake_seg * new_seg;
   struct timespec        now_ts;
 
-  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now_ts);
+  clock_gettime(CLOCK_ID, &now_ts);
 
   // free dying segments and remove from snake
   while (snake->tail && snake->tail->dying)
@@ -215,7 +215,7 @@ bool game_update(void)
       if (PU_NONE != food->powerup)
       {
         snake->powerup = food->powerup;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &snake->powerup_start_ts);
+        clock_gettime(CLOCK_ID, &snake->powerup_start_ts);
       }
 
       // TODO eventually use milliseconds food respawn countdown

@@ -31,8 +31,11 @@ typedef _Bool bool;
 #endif // true
 
 /*
- * Time conversions
+ * Timing utilities
  */
+
+// System clock used by clock_gettime
+#define CLOCK_ID CLOCK_PROCESS_CPUTIME_ID
 
 typedef uint64_t nanosecond_t;
 typedef uint64_t millisecond_t;
@@ -62,7 +65,9 @@ typedef uint64_t second_t;
 #define TIMESPEC2NS(ts) (S2NS((ts).tv_sec) + (ts).tv_nsec)
 #define TIMESPEC2MS(ts) (S2MS((ts).tv_sec) + NS2MS((ts).tv_nsec))
 
-inline void ns2timespec(nanosecond_t ns, struct timespec *ts);
-void        quit(void);
+millisecond_t get_time_ms(void);
+nanosecond_t  get_time_ns(void);
+inline void   ns2timespec(nanosecond_t ns, struct timespec *ts);
+void          quit(void);
 
 #endif // GLOBAL_H

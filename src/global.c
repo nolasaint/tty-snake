@@ -10,6 +10,34 @@
 
 #include <global.h>
 
+/*
+ * function:  get_time_ms
+ * ----------------------
+ * TODO - documentation
+ */
+millisecond_t get_time_ms(void)
+{
+  struct timespec ts;
+
+  clock_gettime(CLOCK_ID, &ts);
+
+  return (millisecond_t) TIMESPEC2MS(ts);
+}
+
+/*
+ * function:  get_time_ns
+ * ----------------------
+ * TODO - documentation
+ */
+nanosecond_t get_time_ns(void)
+{
+  struct timespec ts;
+
+  clock_gettime(CLOCK_ID, &ts);
+
+  return (nanosecond_t) TIMESPEC2NS(ts);
+}
+
 /**
  * function:  ns2timespec
  * ----------------------
