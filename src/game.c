@@ -10,6 +10,8 @@
 
 #include <game.h>
 
+#include <ncurses.h>
+
 // external global variables
 bool is_game_over;
 bool is_game_paused;
@@ -29,8 +31,8 @@ static nanosecond_t powerup_durations[PU_COUNT];
 static void powerup_init(void)
 {
   // initialize powerup durations
-  powerup_durations[PU_SINGLESTEP] = PU_SINGLESTEP_DUR;
-  powerup_durations[PU_NOGROW]     = PU_NOGROW_DUR;
+  powerup_durations[PU_SINGLESTEP] = (nanosecond_t) PU_SINGLESTEP_DUR * SECONDS;
+  powerup_durations[PU_NOGROW]     = (nanosecond_t) PU_NOGROW_DUR * SECONDS;
 }
 
 /**
@@ -127,13 +129,19 @@ void game_setup(unsigned int init_x, unsigned int init_y)
  */
 bool game_update(void)
 {
-  bool   is_colliding = false,
-         should_grow  = false;    // if true, tail not marked dying
-  int    dx = 0, dy = 0;          // change in x and y cooridnates
+  bool         is_colliding = false,
+               should_grow  = false; // if true, tail not marked dying
+  int          dx = 0, dy = 0;       // change in x and y cooridnates
+  nanosecond_t now_ns = get_time_ns();
   struct ent_snake_seg * new_seg;
-  struct timespec        now_ts;
 
-  clock_gettime(CLOCK_ID, &now_ts);
+  struct game_updatecycle_info uc_info = {
+    .start_ns           = get_time_ns(),
+    .snake_dx           = 0,
+    .snake_dy           = 0,
+    .snake_should_grow  = false,
+    .snake_new_velocity = snake->velocity // initially unchanging
+  };
 
   // free dying segments and remove from snake
   while (snake->tail && snake->tail->dying)
@@ -146,25 +154,60 @@ bool game_update(void)
     free(old_tail);
   }
 
+  // TODO idea:
+  // TODO powerup_enable()
+  // TODO pass a game_state_info struct
+  // TODO or game_update_info struct idc
+  // TODO this will keep track of stuff like should_grow
+  // TODO the powerup_enable() or powerup_tick() could modify it
+  // TODO could also have a powerup_post_tick() if stuff needs to be done later
+
+  // check if powerup timer runs out (use powerup_durations array)
+  if (PU_NONE != snake->powerup)
+  {
+//    nanosecond_t alive_ns = now_ns - snake->powerup_start_ns;
+    nanosecond_t alive_ns = uc_info.start_ns - snake->powerup_start_ns;
+
+    if (alive_ns >= powerup_durations[snake->powerup])
+    {
+      // resume snake momentum if single-step powerup expires
+      if (PU_SINGLESTEP == snake->powerup)
+      {
+        snake_set_velocity(snake->prev_velocity);
+
+        // ensure snake doesn't return to VEL_NONE
+        uc_info.snake_new_velocity = snake->velocity;
+      }
+
+      snake->powerup = PU_NONE;
+    }
+  }
+
+  // TODO this is where the powerup check would go
+
   // update head if snake is moving
   if (snake->velocity != VEL_NONE)
   {
     switch (snake->velocity)
     {
       case VEL_UP:
-        dy = -1;
+//        dy = -1;
+        uc_info.snake_dy = -1;
         break;
 
       case VEL_RIGHT:
-        dx = 1;
+//        dx = 1;
+        uc_info.snake_dx = 1;
         break;
 
       case VEL_DOWN:
-        dy = 1;
+//        dy = 1;
+        uc_info.snake_dy = 1;
         break;
 
      case VEL_LEFT:
-        dx = -1;
+//        dx = -1;
+        uc_info.snake_dx = -1;
         break;
     }
 
@@ -173,12 +216,14 @@ bool game_update(void)
 
     // check if allocation failed
     if (!new_seg)
-      quit();
+      quit(); // TODO maybe use a diff function if quit() doesnt behave
 
     *new_seg = (struct ent_snake_seg) {
       .dying = false,
-      .x     = snake->head->x + dx,
-      .y     = snake->head->y + dy,
+//      .x     = snake->head->x + dx,
+//      .y     = snake->head->y + dy,
+      .x = snake->head->x + uc_info.snake_dx,
+      .y = snake->head->y + uc_info.snake_dy,
       .prev  = NULL,
       .next  = snake->head
     };
@@ -187,45 +232,28 @@ bool game_update(void)
     snake->head = new_seg;
     snake->length++;
 
-    // check if powerup timer runs out (use powerup_durations array)
-    if (PU_NONE != snake->powerup)
-    {
-      nanosecond_t alivetime = (
-        TIMESPEC2NS(now_ts) - TIMESPEC2NS(snake->powerup_start_ts)
-      );
-
-#ifdef DEBUG
-      mvprintw(0,0,"pu_spawntime: %lu ns\n",TIMESPEC2NS(snake->powerup_start_ts));
-      mvprintw(1,0,"now_ts:       %lu ns\n",TIMESPEC2NS(now_ts));
-      mvprintw(2,0,"alivetime:    %lu ns\n",alivetime);
-      mvprintw(3,0,"duration:     %lu ns\n",(nanosecond_t)powerup_durations[snake->powerup] * SECONDS);
-#endif
-
-      if (alivetime >= powerup_durations[snake->powerup] * SECONDS)
-        snake->powerup = PU_NONE;
-    }
-
     // check if snake consumed food
     if (!food->consumed && ARE_COLLIDING(food, snake->head))
     {
-      should_grow    = true;
+//      should_grow    = true;
+      uc_info.snake_should_grow = true;
       food->consumed = true;
 
       // don't override current powerup
       if (PU_NONE != food->powerup)
       {
         snake->powerup = food->powerup;
-        clock_gettime(CLOCK_ID, &snake->powerup_start_ts);
+        snake->powerup_start_ns = get_time_ns();
       }
 
       // TODO eventually use milliseconds food respawn countdown
-      // TODO don't allow powerups to spawn if one is already active
-      //food_spawn((bool) !snake->powerup);
-      food_spawn(true);
+      // don't allow powerups to spawn if one is already active
+      food_spawn(PU_NONE == snake->powerup);
     }
 
     // pop tail and mark dying if snake is not growing
-    if (!should_grow || PU_NOGROW == snake->powerup)
+//    if (!should_grow || PU_NOGROW == snake->powerup)
+    if (!uc_info.snake_should_grow || PU_NOGROW == snake->powerup)
     {
       snake->tail->dying = true;
       snake->length--;
@@ -252,7 +280,7 @@ bool game_update(void)
 
     // check if single-step powerup is active
     if (PU_SINGLESTEP == snake->powerup)
-      snake->velocity = VEL_NONE;
+      snake_set_velocity(VEL_NONE);
 
     // TODO other ways to lose / win?
     // check if game is over
@@ -286,3 +314,44 @@ void game_unset(void)
 
   free(snake);
 }
+
+/**
+ * function:  snake_set_velocity
+ * -----------------------------
+ * TODO - documetation
+ */
+void snake_set_velocity(enum velocity_t velocity)
+{
+  // TODO move this somewhere else
+  enum velocity_t opposite_velocity[5];
+
+  opposite_velocity[VEL_NONE]  = VEL_NONE;
+  opposite_velocity[VEL_UP]    = VEL_DOWN;
+  opposite_velocity[VEL_RIGHT] = VEL_LEFT;
+  opposite_velocity[VEL_DOWN]  = VEL_UP;
+  opposite_velocity[VEL_LEFT]  = VEL_RIGHT;
+
+  enum velocity_t illegal_velocity;
+
+  // disallow backtracking (180 deg velocity change)
+  switch (snake->velocity)
+  {
+    // likely in single-step mode, so check prev_velocity
+    case VEL_NONE:
+      illegal_velocity = opposite_velocity[snake->prev_velocity];
+      break;
+
+    // all other times, check current velocity
+    default:
+      illegal_velocity = opposite_velocity[snake->velocity];
+      break;
+  }
+
+  // don't update velocity if unchanging or illegal
+  if (velocity != illegal_velocity && velocity != snake->velocity)
+  {
+    snake->prev_velocity = snake->velocity;
+    snake->velocity      = velocity;
+  }
+}
+

@@ -6,11 +6,24 @@
   * snake movement becomes buggy
   * have to handle signals/interrupts inside pthread so that exiting does not require extra input
 
-#### Powerups
+* if the kyeboard input thread is NOT used, input will be buffered and can be read late
+  * can be seen clearly when in single-step mode and holding down a directional arrow, then letting go
 
-* powerups spawn far too frequently, check logic in food_spawn
+#### Movement
+
+* in single-step mode, snake can backtrack (since velocity is VEL_NONE)
+  * can be fixed by tracking previous velocity in addition to current velocity
+
+* in single-step mode, when the powerup expires, the snake can remain at VEL_NONE
+  * again, can be fixed by tracking previous velocity
 
 ## TO-DO
+
+#### Scoring
+
+* implement scoring (factor of length, time, and food eaten, maybe?)
+
+* display score
 
 #### Engine
 
@@ -23,7 +36,7 @@
 
 * define how food with a powerup should be displayed (for each powerup)
 
-* enforce a lifetime for powerups so they do not last forever, and display this lifetime on the screen
+* display how until a powerup will expire
 
 #### Collision Detection
 

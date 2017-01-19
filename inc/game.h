@@ -30,8 +30,8 @@
 #define PU_SPAWN_PERCENTAGE 100
 
 // powerup durations (in seconds)
-#define PU_SINGLESTEP_DUR 10//30
-#define PU_NOGROW_DUR     10//30
+#define PU_SINGLESTEP_DUR 5//15
+#define PU_NOGROW_DUR     1//30
 
 #include <global.h>
 
@@ -42,11 +42,11 @@
  */
 enum velocity_t
 {
-  VEL_NONE = 0,
-  VEL_UP,
-  VEL_RIGHT,
-  VEL_DOWN,
-  VEL_LEFT
+  VEL_NONE  = 0,
+  VEL_UP    ,//= 1,
+  VEL_RIGHT ,//= 2,
+  VEL_DOWN  ,//= ~VEL_UP,
+  VEL_LEFT   //= ~VEL_RIGHT
 };
 
 /**
@@ -60,7 +60,7 @@ enum powerup_t
   PU_SINGLESTEP,
   PU_NOGROW,
   PU_COUNT       // Simply stores the number of powerup_t items
-};
+}; // TODO let PU_NONE be 0, and PU_COUNT somehow be defined?
 
 /**
  * struct:  ent_food
@@ -85,11 +85,11 @@ struct ent_food
 struct ent_snake
 {
   unsigned int length;
+  nanosecond_t powerup_start_ns; // TODO switch to powerup_expire_ns
 
   enum velocity_t velocity;
+  enum velocity_t prev_velocity;
   enum powerup_t  powerup;
-
-  struct timespec powerup_start_ts;
 
   struct ent_snake_seg * head;
   struct ent_snake_seg * tail;
@@ -111,6 +111,26 @@ struct ent_snake_seg
   struct ent_snake_seg * next; // NULL if tail
 };
 
+/**
+ * struct:  game_updatecycle_info
+ * ------------------------------
+ * start_ns:  the nanosecond at which this update cycle began
+ *
+ * snake_dx:            the change in the snake's x coordinate
+ * snake_dy:            the change in the snake's y coordinate
+ * snake_should_grow:   whether the snake should grow this cycle
+ * snake_new_velocity:  snake's new velocity at end of update cycle
+ */
+struct game_updatecycle_info
+{
+  nanosecond_t start_ns;
+
+  int             snake_dx;
+  int             snake_dy;
+  bool            snake_should_grow;
+  enum velocity_t snake_new_velocity;
+};
+
 // Game status
 extern bool is_game_over;
 extern bool is_game_paused;
@@ -126,5 +146,7 @@ extern struct ent_snake * snake;
 void game_setup(unsigned int init_x, unsigned int init_y);
 bool game_update(void);
 void game_unset(void);
+
+void snake_set_velocity(enum velocity_t velocity);
 
 #endif // GAME_H

@@ -121,10 +121,14 @@ void engine_start(void)
   // engine tick
   while (do_tick && !is_game_over)
   {
-    struct timespec start_ts, end_ts;
-    nanosecond_t    elapsed_ns;
+//    struct timespec start_ts, end_ts;
+//    nanosecond_t    elapsed_ns;
 
-    clock_gettime(CLOCK_ID, &start_ts);
+//    clock_gettime(CLOCK_ID, &start_ts);
+
+    nanosecond_t start_ns, end_ns, elapsed_ns;
+
+    start_ns = get_time_ns();
 
     // check for keyboard input
 #ifdef USE_KB_LISTEN_THREAD
@@ -135,26 +139,34 @@ void engine_start(void)
     {
       case KEY_UP:
       case 'w':
-        if (snake->velocity != VEL_DOWN)
-          snake->velocity = VEL_UP;
+        /*if (snake->velocity != VEL_DOWN)
+          snake->prev_velocity = snake_velocity;
+          snake->velocity = VEL_UP;*/
+        snake_set_velocity(VEL_UP);
         break;
 
       case KEY_RIGHT:
       case 'd':
-        if (snake->velocity != VEL_LEFT)
-          snake->velocity = VEL_RIGHT;
+        /*if (snake->velocity != VEL_LEFT)
+          snake->prev_velocity = snake_velocity;
+          snake->velocity = VEL_RIGHT;*/
+        snake_set_velocity(VEL_RIGHT);
         break;
 
       case KEY_DOWN:
       case 's':
-        if (snake->velocity != VEL_UP)
-          snake->velocity = VEL_DOWN;
+        /*if (snake->velocity != VEL_UP)
+          snake->prev_velocity = snake_velocity;
+          snake->velocity = VEL_DOWN;*/
+        snake_set_velocity(VEL_DOWN);
         break;
 
       case KEY_LEFT:
       case 'a':
-        if (snake->velocity != VEL_RIGHT)
-          snake->velocity = VEL_LEFT;
+        /*if (snake->velocity != VEL_RIGHT)
+          snake->prev_velocity = snake_velocity;
+          snake->velocity = VEL_LEFT;*/
+        snake_set_velocity(VEL_LEFT);
         break;
 
       // ignore getch() returning from timeout()
@@ -182,15 +194,21 @@ void engine_start(void)
     graphics_update();
 
     // limit engine tickrate
-    clock_gettime(CLOCK_ID, &end_ts);
+//    clock_gettime(CLOCK_ID, &end_ts);
 
-    elapsed_ns = TIMESPEC2NS(end_ts) - TIMESPEC2NS(start_ts);
+//    elapsed_ns = TIMESPEC2NS(end_ts) - TIMESPEC2NS(start_ts);
+    end_ns     = get_time_ns();
+    elapsed_ns = end_ns - start_ns;
 
     // sleep if less than MAX_ELAPSED_NS ns have elapsed
     if (elapsed_ns < MAX_ELAPSED_NS)
     {
-      ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &end_ts);
-      nanosleep(&end_ts, NULL);
+      struct timespec sleep_ts;
+//      ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &end_ts);
+
+//      nanosleep(&end_ts, NULL);
+      ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &sleep_ts);
+      nanosleep(&sleep_ts, NULL);
     }
   } // end of tick loop
 
