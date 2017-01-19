@@ -9,14 +9,6 @@
 * if the kyeboard input thread is NOT used, input will be buffered and can be read late
   * can be seen clearly when in single-step mode and holding down a directional arrow, then letting go
 
-#### Movement
-
-* in single-step mode, snake can backtrack (since velocity is VEL_NONE)
-  * can be fixed by tracking previous velocity in addition to current velocity
-
-* in single-step mode, when the powerup expires, the snake can remain at VEL_NONE
-  * again, can be fixed by tracking previous velocity
-
 ## TO-DO
 
 #### Scoring

@@ -36,6 +36,82 @@ static void powerup_init(void)
 }
 
 /**
+ * function:  powerup_tick
+ * -----------------------
+ * TODO - Documentation
+ *
+ * When enabling a newly-acquired (aka just consumed) powerup, check_expiry
+ * should be set to false so no time is wasted checking if the powerup is
+ * expired.
+ *
+ * p_uc_info:     current update cycle's info struct
+ * check_expiry:  if true, check if the powerup should expire
+ */
+static void powerup_tick(
+    struct game_updatecycle_info * p_uc_info,
+    bool   check_expiry
+)
+{
+  // return immediately if no powerup is active
+  if (PU_NONE == snake->powerup)
+    return;
+
+  // check if powerup has expired
+  if (check_expiry)
+  {
+    if (p_uc_info->start_ns >= snake->powerup_expire_ns)
+    {
+      // resume snake momentum if single-step powerup expires
+      if (PU_SINGLESTEP == snake->powerup)
+      {
+        snake_set_velocity(snake->prev_velocity);
+
+        // ensure snake doesn't return to VEL_NONE
+        p_uc_info->snake_new_velocity = snake->velocity;
+     }
+
+      snake->powerup = PU_NONE;
+    }
+  }
+
+  // set update cycle information based on powerup
+  switch (snake->powerup)
+  {
+    // no powerup
+    case PU_NONE:
+    case PU_COUNT:
+      break;
+
+    // snake moves one unit at a time with this powerup
+    case PU_SINGLESTEP:
+      p_uc_info->snake_new_velocity = VEL_NONE;
+      break;
+
+    // snake does not grow when consuming food with this powerup
+    case PU_NOGROW:
+      p_uc_info->snake_can_grow = false;
+      break;
+  }
+}
+
+/*
+ * function:  powerup_activate
+ * ---------------------------
+ * TODO - Documentation
+ */
+static void powerup_activate(
+    enum   powerup_t               powerup,
+    struct game_updatecycle_info * p_uc_info
+)
+{
+  snake->powerup           = powerup;
+  snake->powerup_expire_ns = p_uc_info->start_ns + powerup_durations[powerup];
+
+  // don't waste time checking expiry for newly-acquired powerup
+  powerup_tick(p_uc_info, false);
+}
+
+/**
  * function: rand_powerup
  * ----------------------
  * returns a random powerup_t based on pre-defined probabilities.
@@ -129,17 +205,15 @@ void game_setup(unsigned int init_x, unsigned int init_y)
  */
 bool game_update(void)
 {
-  bool         is_colliding = false,
-               should_grow  = false; // if true, tail not marked dying
-  int          dx = 0, dy = 0;       // change in x and y cooridnates
-  nanosecond_t now_ns = get_time_ns();
+  bool   is_colliding = false,
+         should_grow  = false;
   struct ent_snake_seg * new_seg;
 
   struct game_updatecycle_info uc_info = {
     .start_ns           = get_time_ns(),
     .snake_dx           = 0,
     .snake_dy           = 0,
-    .snake_should_grow  = false,
+    .snake_can_grow     = true,
     .snake_new_velocity = snake->velocity // initially unchanging
   };
 
@@ -154,59 +228,28 @@ bool game_update(void)
     free(old_tail);
   }
 
-  // TODO idea:
-  // TODO powerup_enable()
-  // TODO pass a game_state_info struct
-  // TODO or game_update_info struct idc
-  // TODO this will keep track of stuff like should_grow
-  // TODO the powerup_enable() or powerup_tick() could modify it
-  // TODO could also have a powerup_post_tick() if stuff needs to be done later
-
-  // check if powerup timer runs out (use powerup_durations array)
-  if (PU_NONE != snake->powerup)
-  {
-//    nanosecond_t alive_ns = now_ns - snake->powerup_start_ns;
-    nanosecond_t alive_ns = uc_info.start_ns - snake->powerup_start_ns;
-
-    if (alive_ns >= powerup_durations[snake->powerup])
-    {
-      // resume snake momentum if single-step powerup expires
-      if (PU_SINGLESTEP == snake->powerup)
-      {
-        snake_set_velocity(snake->prev_velocity);
-
-        // ensure snake doesn't return to VEL_NONE
-        uc_info.snake_new_velocity = snake->velocity;
-      }
-
-      snake->powerup = PU_NONE;
-    }
-  }
-
-  // TODO this is where the powerup check would go
+  // update uc_info based on powerup, if one is active
+  powerup_tick(&uc_info, true);
 
   // update head if snake is moving
   if (snake->velocity != VEL_NONE)
   {
+    // TODO if snake_d* is already updated by a powerup, don't set it here
     switch (snake->velocity)
     {
       case VEL_UP:
-//        dy = -1;
         uc_info.snake_dy = -1;
         break;
 
       case VEL_RIGHT:
-//        dx = 1;
         uc_info.snake_dx = 1;
         break;
 
       case VEL_DOWN:
-//        dy = 1;
         uc_info.snake_dy = 1;
         break;
 
      case VEL_LEFT:
-//        dx = -1;
         uc_info.snake_dx = -1;
         break;
     }
@@ -220,8 +263,6 @@ bool game_update(void)
 
     *new_seg = (struct ent_snake_seg) {
       .dying = false,
-//      .x     = snake->head->x + dx,
-//      .y     = snake->head->y + dy,
       .x = snake->head->x + uc_info.snake_dx,
       .y = snake->head->y + uc_info.snake_dy,
       .prev  = NULL,
@@ -235,25 +276,19 @@ bool game_update(void)
     // check if snake consumed food
     if (!food->consumed && ARE_COLLIDING(food, snake->head))
     {
-//      should_grow    = true;
-      uc_info.snake_should_grow = true;
+      should_grow    = true;
       food->consumed = true;
 
-      // don't override current powerup
+      // absorb food's powerup
       if (PU_NONE != food->powerup)
-      {
-        snake->powerup = food->powerup;
-        snake->powerup_start_ns = get_time_ns();
-      }
+        powerup_activate(food->powerup, &uc_info);
 
-      // TODO eventually use milliseconds food respawn countdown
       // don't allow powerups to spawn if one is already active
       food_spawn(PU_NONE == snake->powerup);
     }
 
     // pop tail and mark dying if snake is not growing
-//    if (!should_grow || PU_NOGROW == snake->powerup)
-    if (!uc_info.snake_should_grow || PU_NOGROW == snake->powerup)
+    if (!uc_info.snake_can_grow || !should_grow)
     {
       snake->tail->dying = true;
       snake->length--;
@@ -276,13 +311,12 @@ bool game_update(void)
       }
     }
 
-    // TODO should powerup checks be separate from normal logic?
-
-    // check if single-step powerup is active
-    if (PU_SINGLESTEP == snake->powerup)
-      snake_set_velocity(VEL_NONE);
+    // update snake velocity (usually due to powerups)
+    snake_set_velocity(uc_info.snake_new_velocity);
 
     // TODO other ways to lose / win?
+    // TODO game over: win or lose? can you only lose?
+
     // check if game is over
     is_game_over = is_colliding;
   }

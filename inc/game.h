@@ -27,11 +27,11 @@
 #define ENT_FOOD_ATTR A_NORMAL
 
 // average # of powerups per 100 food spawns
-#define PU_SPAWN_PERCENTAGE 100
+#define PU_SPAWN_PERCENTAGE 100//10
 
 // powerup durations (in seconds)
-#define PU_SINGLESTEP_DUR 5//15
-#define PU_NOGROW_DUR     1//30
+#define PU_SINGLESTEP_DUR 10
+#define PU_NOGROW_DUR     15
 
 #include <global.h>
 
@@ -85,7 +85,7 @@ struct ent_food
 struct ent_snake
 {
   unsigned int length;
-  nanosecond_t powerup_start_ns; // TODO switch to powerup_expire_ns
+  nanosecond_t powerup_expire_ns;
 
   enum velocity_t velocity;
   enum velocity_t prev_velocity;
@@ -118,16 +118,18 @@ struct ent_snake_seg
  *
  * snake_dx:            the change in the snake's x coordinate
  * snake_dy:            the change in the snake's y coordinate
- * snake_should_grow:   whether the snake should grow this cycle
+ * snake_can_grow:      whether the snake grows on food consumption
  * snake_new_velocity:  snake's new velocity at end of update cycle
  */
 struct game_updatecycle_info
 {
+  // update cycle information
   nanosecond_t start_ns;
 
+  // snake information
   int             snake_dx;
   int             snake_dy;
-  bool            snake_should_grow;
+  bool            snake_can_grow;
   enum velocity_t snake_new_velocity;
 };
 
