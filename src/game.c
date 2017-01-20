@@ -19,140 +19,21 @@ struct ent_food  * food;
 struct ent_snake * snake;
 
 // global variables
-// TODO: this uses a lot of memory, testing component-based checks first
-// static bool collision_map[][];
 static nanosecond_t powerup_durations[PU_COUNT];
+static const char * powerup_names[PU_COUNT + 1]; // include PU_NONE
 
-/**
- * function: powerup_init
- * ----------------------
- * TODO: Documentation
- */
-static void powerup_init(void)
-{
-  // initialize powerup durations
-  powerup_durations[PU_SINGLESTEP] = (nanosecond_t) PU_SINGLESTEP_DUR * SECONDS;
-  powerup_durations[PU_NOGROW]     = (nanosecond_t) PU_NOGROW_DUR * SECONDS;
-}
+// private forward declarations
+static void food_spawn(bool);
 
-/**
- * function:  powerup_tick
- * -----------------------
- * TODO - Documentation
- *
- * When enabling a newly-acquired (aka just consumed) powerup, check_expiry
- * should be set to false so no time is wasted checking if the powerup is
- * expired.
- *
- * p_uc_info:     current update cycle's info struct
- * check_expiry:  if true, check if the powerup should expire
- */
-static void powerup_tick(
-    struct game_updatecycle_info * p_uc_info,
-    bool   check_expiry
-)
-{
-  // return immediately if no powerup is active
-  if (PU_NONE == snake->powerup)
-    return;
+static enum powerup_t rand_powerup(void);
+static void powerup_init(void);
+static void powerup_tick(struct game_updatecycle_info *, bool);
+static void powerup_activate(struct game_updatecycle_info *, enum powerup_t);
 
-  // check if powerup has expired
-  if (check_expiry)
-  {
-    if (p_uc_info->start_ns >= snake->powerup_expire_ns)
-    {
-      // resume snake momentum if single-step powerup expires
-      if (PU_SINGLESTEP == snake->powerup)
-      {
-        snake_set_velocity(snake->prev_velocity);
-
-        // ensure snake doesn't return to VEL_NONE
-        p_uc_info->snake_new_velocity = snake->velocity;
-     }
-
-      snake->powerup = PU_NONE;
-    }
-  }
-
-  // set update cycle information based on powerup
-  switch (snake->powerup)
-  {
-    // no powerup
-    case PU_NONE:
-    case PU_COUNT:
-      break;
-
-    // snake moves one unit at a time with this powerup
-    case PU_SINGLESTEP:
-      p_uc_info->snake_new_velocity = VEL_NONE;
-      break;
-
-    // snake does not grow when consuming food with this powerup
-    case PU_NOGROW:
-      p_uc_info->snake_can_grow = false;
-      break;
-  }
-}
 
 /*
- * function:  powerup_activate
- * ---------------------------
- * TODO - Documentation
+ * game functions
  */
-static void powerup_activate(
-    enum   powerup_t               powerup,
-    struct game_updatecycle_info * p_uc_info
-)
-{
-  snake->powerup           = powerup;
-  snake->powerup_expire_ns = p_uc_info->start_ns + powerup_durations[powerup];
-
-  // don't waste time checking expiry for newly-acquired powerup
-  powerup_tick(p_uc_info, false);
-}
-
-/**
- * function: rand_powerup
- * ----------------------
- * returns a random powerup_t based on pre-defined probabilities.
- *
- * returns: a randomly-selected powerup
- */
-static enum powerup_t rand_powerup(void)
-{
-  // TODO use probabilities
-  return (enum powerup_t)(rand() % PU_COUNT);
-}
-
-/**
- * function:  food_spawn
- * ---------------------
- * randomly place a food bit (potentially with powerup) on the board.
- *
- * allow_powerup: true if food can spawn with a powerup
- */
-static void food_spawn(bool allow_powerup)
-{
-  unsigned int rand_x, rand_y;
-
-  do
-  {
-    // rand seeded in ttysnake.c:main
-    rand_x = rand() % game_x_bound;
-    rand_y = rand() % game_y_bound;
-  } while (rand_x == snake->head->x && rand_y == snake->head->y);
-
-  food->powerup = PU_NONE;
-
-  // rarely, spawn powerup (if allowed)
-  if (allow_powerup && (rand() % 100) <= PU_SPAWN_PERCENTAGE)
-    food->powerup = rand_powerup();
-
-  food->x = rand_x;
-  food->y = rand_y;
-
-  food->consumed = false;
-}
 
 /**
  * function:  game_setup
@@ -285,7 +166,7 @@ bool game_update(void)
 
       // absorb food's powerup
       if (PU_NONE != food->powerup)
-        powerup_activate(food->powerup, &uc_info);
+        powerup_activate(&uc_info, food->powerup);
 
       // don't allow powerups to spawn if one is already active
       food_spawn(PU_NONE == snake->powerup);
@@ -313,6 +194,15 @@ bool game_update(void)
 
         check_seg = check_seg->next;
       }
+    }
+
+    // collision detection: walls
+    if (!is_colliding)
+    {
+      is_colliding = (
+        snake->head->x <= 0 || snake->head->x >= game_x_bound - 1
+        || snake->head->y <= 0 || snake->head->y >= game_y_bound - 1
+      );
     }
 
     // update snake velocity (usually due to powerups)
@@ -353,6 +243,46 @@ void game_unset(void)
   free(snake);
 }
 
+
+/*
+ * food functions
+ */
+
+/**
+ * function:  food_spawn
+ * ---------------------
+ * randomly place a food bit (potentially with powerup) on the board.
+ *
+ * allow_powerup: true if food can spawn with a powerup
+ */
+static void food_spawn(bool allow_powerup)
+{
+  unsigned int rand_x, rand_y;
+
+  do
+  {
+    // rand seeded in ttysnake.c:main
+    rand_x = rand() % (game_x_bound - 2) + 1; // inside boundaries
+    rand_y = rand() % (game_y_bound - 2) + 1; // inside boundaries
+  } while (rand_x == snake->head->x && rand_y == snake->head->y);
+
+  food->powerup = PU_NONE;
+
+  // rarely, spawn powerup (if allowed)
+  if (allow_powerup && (rand() % 100) <= PU_SPAWN_PERCENTAGE)
+    food->powerup = rand_powerup();
+
+  food->x = rand_x;
+  food->y = rand_y;
+
+  food->consumed = false;
+}
+
+
+/*
+ * snake functions
+ */
+
 /**
  * function:  snake_set_velocity
  * -----------------------------
@@ -390,6 +320,127 @@ void snake_set_velocity(enum velocity_t velocity)
   {
     snake->prev_velocity = snake->velocity;
     snake->velocity      = velocity;
+  }
+}
+
+
+/*
+ * powerup functions
+ */
+
+/**
+ * function:  powerup_get_name
+ * ---------------------------
+ * TODO - Documentation
+ */
+const char * powerup_get_name(enum powerup_t powerup)
+{
+  return powerup_names[powerup + 1];
+}
+
+/**
+ * function: powerup_init
+ * ----------------------
+ * TODO: Documentation
+ */
+static void powerup_init(void)
+{
+  // initialize powerup durations
+  powerup_durations[PU_SINGLESTEP] = (nanosecond_t) PU_SINGLESTEP_DUR * SECONDS;
+  powerup_durations[PU_NOGROW]     = (nanosecond_t) PU_NOGROW_DUR * SECONDS;
+
+  // initialize powerup names
+  powerup_names[PU_NONE + 1]        = "NONE";
+  powerup_names[PU_SINGLESTEP + 1]  = "SINGLE-STEP";
+  powerup_names[PU_NOGROW + 1]      = "NO GROW";
+}
+
+/**
+ * function: rand_powerup
+ * ----------------------
+ * returns a random powerup_t based on pre-defined probabilities.
+ *
+ * returns: a randomly-selected powerup
+ */
+static enum powerup_t rand_powerup(void)
+{
+  // TODO use probabilities
+  return (enum powerup_t)(rand() % PU_COUNT);
+}
+
+/*
+ * function:  powerup_activate
+ * ---------------------------
+ * TODO - Documentation
+ */
+static void powerup_activate(
+    struct game_updatecycle_info * p_uc_info,
+    enum   powerup_t               powerup
+)
+{
+  snake->powerup           = powerup;
+  snake->powerup_expire_ns = p_uc_info->start_ns + powerup_durations[powerup];
+
+  // don't waste time checking expiry for newly-acquired powerup
+  powerup_tick(p_uc_info, false);
+}
+
+/**
+ * function:  powerup_tick
+ * -----------------------
+ * TODO - Documentation
+ *
+ * When enabling a newly-acquired (aka just consumed) powerup, check_expiry
+ * should be set to false so no time is wasted checking if the powerup is
+ * expired.
+ *
+ * p_uc_info:     current update cycle's info struct
+ * check_expiry:  if true, check if the powerup should expire
+ */
+static void powerup_tick(
+    struct game_updatecycle_info * p_uc_info,
+    bool   check_expiry
+)
+{
+  // return immediately if no powerup is active
+  if (PU_NONE == snake->powerup)
+    return;
+
+  // check if powerup has expired
+  if (check_expiry)
+  {
+    if (p_uc_info->start_ns >= snake->powerup_expire_ns)
+    {
+      // resume snake momentum if single-step powerup expires
+      if (PU_SINGLESTEP == snake->powerup)
+      {
+        snake_set_velocity(snake->prev_velocity);
+
+        // ensure snake doesn't return to VEL_NONE
+        p_uc_info->snake_new_velocity = snake->velocity;
+     }
+
+      snake->powerup = PU_NONE;
+    }
+  }
+
+  // set update cycle information based on powerup
+  switch (snake->powerup)
+  {
+    // no powerup
+    case PU_NONE:
+    case PU_COUNT:
+      break;
+
+    // snake moves one unit at a time with this powerup
+    case PU_SINGLESTEP:
+      p_uc_info->snake_new_velocity = VEL_NONE;
+      break;
+
+    // snake does not grow when consuming food with this powerup
+    case PU_NOGROW:
+      p_uc_info->snake_can_grow = false;
+      break;
   }
 }
 

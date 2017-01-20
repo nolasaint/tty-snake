@@ -7,7 +7,10 @@
  */
 
 #include <ncurses.h>
+#include <stdio.h>   // sprintf()
+
 #include <game.h>
+
 #include <graphics.h>
 
 // external global variables
@@ -39,6 +42,10 @@ void graphics_setup(void)
     getmaxyx(stdscr, game_y_bound, game_x_bound);
 
     old_curs = curs_set(0);
+
+    // draw game area boundary (use defaults since they look pretty)
+    border(0,0,0,0,0,0,0,0);
+
     is_graphics_setup = true;
   }
 }
@@ -53,6 +60,13 @@ void graphics_update(void)
   struct ent_snake_seg * dead_seg = snake->tail;
 
   // TODO: check game state (game over? powerups?)
+
+  // re-draw top border
+  mvhline(0, 1, ACS_HLINE, game_x_bound - 2);
+
+  // TODO show powerup time remaining
+  // draw gamestate string
+  mvprintw(0, 2, "[ TTY-SNAKE | SCORE: %d | POWERUP: %s ]", 0, powerup_get_name(snake->powerup));
 
   // erase dead segments from screen
   while (dead_seg && dead_seg->dying)

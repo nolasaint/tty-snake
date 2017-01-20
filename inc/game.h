@@ -13,7 +13,7 @@
   ((ent_a)->x == (ent_b)->x && (ent_a)->y == (ent_b)->y)
 
 // average # of powerups per 100 food spawns
-#define PU_SPAWN_PERCENTAGE 100//10
+#define PU_SPAWN_PERCENTAGE 10
 
 // powerup durations (in seconds)
 #define PU_SINGLESTEP_DUR 10
@@ -29,10 +29,10 @@
 enum velocity_t
 {
   VEL_NONE  = 0,
-  VEL_UP    ,//= 1,
-  VEL_RIGHT ,//= 2,
-  VEL_DOWN  ,//= ~VEL_UP,
-  VEL_LEFT   //= ~VEL_RIGHT
+  VEL_UP    ,
+  VEL_RIGHT ,
+  VEL_DOWN  ,
+  VEL_LEFT
 };
 
 /**
@@ -123,22 +123,25 @@ struct game_updatecycle_info
   enum velocity_t snake_new_velocity;
 };
 
-// Game status
+// game status
 extern bool is_game_over;
 extern bool is_game_paused;
 
-// Game area bounds
+// game area bounds
 extern unsigned int game_x_bound;
 extern unsigned int game_y_bound;
 
-// Entities TODO: const?
+// entities
 extern struct ent_food  * food;
 extern struct ent_snake * snake;
 
-void game_setup(unsigned int init_x, unsigned int init_y);
-bool game_update(void);
-void game_unset(void);
+// function declarations
+void    game_setup(unsigned int init_x, unsigned int init_y);
+bool    game_update(void);
+void    game_unset(void);
 
-void snake_set_velocity(enum velocity_t velocity);
+void    snake_set_velocity(enum velocity_t velocity);
+
+const char * powerup_get_name(enum powerup_t powerup);
 
 #endif // GAME_H
