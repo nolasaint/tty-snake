@@ -214,6 +214,7 @@ bool game_update(void)
     .snake_dx           = 0,
     .snake_dy           = 0,
     .snake_can_grow     = true,
+    .snake_should_move  = true,
     .snake_new_velocity = snake->velocity // initially unchanging
   };
 
@@ -234,24 +235,27 @@ bool game_update(void)
   // update head if snake is moving
   if (snake->velocity != VEL_NONE)
   {
-    // TODO if snake_d* is already updated by a powerup, don't set it here
-    switch (snake->velocity)
+    // update snake's x or y coordinate based on velocity, if allowed
+    if (uc_info.snake_should_move)
     {
-      case VEL_UP:
-        uc_info.snake_dy = -1;
-        break;
+      switch (snake->velocity)
+      {
+        case VEL_UP:
+          uc_info.snake_dy = -1;
+          break;
 
-      case VEL_RIGHT:
-        uc_info.snake_dx = 1;
-        break;
+        case VEL_RIGHT:
+         uc_info.snake_dx = 1;
+          break;
 
-      case VEL_DOWN:
-        uc_info.snake_dy = 1;
-        break;
+        case VEL_DOWN:
+          uc_info.snake_dy = 1;
+          break;
 
-     case VEL_LEFT:
-        uc_info.snake_dx = -1;
-        break;
+       case VEL_LEFT:
+          uc_info.snake_dx = -1;
+          break;
+      }
     }
 
     // set up new_seg
@@ -356,8 +360,8 @@ void game_unset(void)
  */
 void snake_set_velocity(enum velocity_t velocity)
 {
-  // TODO move this somewhere else
   enum velocity_t opposite_velocity[5];
+  enum velocity_t illegal_velocity;
 
   opposite_velocity[VEL_NONE]  = VEL_NONE;
   opposite_velocity[VEL_UP]    = VEL_DOWN;
@@ -365,7 +369,7 @@ void snake_set_velocity(enum velocity_t velocity)
   opposite_velocity[VEL_DOWN]  = VEL_UP;
   opposite_velocity[VEL_LEFT]  = VEL_RIGHT;
 
-  enum velocity_t illegal_velocity;
+  // TODO if snake is only one unit long, is backtracking OK?
 
   // disallow backtracking (180 deg velocity change)
   switch (snake->velocity)

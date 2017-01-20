@@ -12,20 +12,6 @@
 #define ARE_COLLIDING(ent_a,ent_b) \
   ((ent_a)->x == (ent_b)->x && (ent_a)->y == (ent_b)->y)
 
-// snake display settings
-#define ENT_SNAKE_CH        ' '
-#define ENT_SNAKE_ATTR      A_BOLD | A_STANDOUT
-
-#define ENT_SNAKE_HEAD_CH   ' '
-#define ENT_SNAKE_HEAD_ATTR A_BOLD | A_STANDOUT
-
-#define ENT_SNAKE_TAIL_CH   'T'
-#define ENT_SNAKE_TAIL_ATTR A_BOLD | A_STANDOUT
-
-// food display settings
-#define ENT_FOOD_CH   'O' //'•'
-#define ENT_FOOD_ATTR A_NORMAL
-
 // average # of powerups per 100 food spawns
 #define PU_SPAWN_PERCENTAGE 100//10
 
@@ -119,6 +105,9 @@ struct ent_snake_seg
  * snake_dx:            the change in the snake's x coordinate
  * snake_dy:            the change in the snake's y coordinate
  * snake_can_grow:      whether the snake grows on food consumption
+ * snake_should_move:   whether the snake should move automatically,
+ *                        based on its velocity (usually set to false
+ *                        if powerup is altering movement).
  * snake_new_velocity:  snake's new velocity at end of update cycle
  */
 struct game_updatecycle_info
@@ -130,6 +119,7 @@ struct game_updatecycle_info
   int             snake_dx;
   int             snake_dy;
   bool            snake_can_grow;
+  bool            snake_should_move;
   enum velocity_t snake_new_velocity;
 };
 

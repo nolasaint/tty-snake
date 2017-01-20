@@ -64,15 +64,23 @@ void graphics_update(void)
 
   // draw entities
   // TODO maybe check if either entity has moved? how?
-  mvaddch(snake->head->y, snake->head->x, ENT_SNAKE_HEAD_CH|ENT_SNAKE_HEAD_ATTR);
+
+  // overwrite previous head with body segment, if body segments exist
+  if (snake->length > 2)
+    mvaddch(snake->head->next->y, snake->head->next->x, ENT_SNAKE_DISP);
+
+  // draw tail if it is not the head
+  if (snake->length > 1)
+    mvaddch(dead_seg->y, dead_seg->x, ENT_SNAKE_TAIL_DISP);
+
+  // draw head
+  mvaddch(snake->head->y, snake->head->x, ENT_SNAKE_HEAD_DISP);
 
   if (!food->consumed)
   {
-    // TODO draw powerup attributes
-    // TODO use a switch/case and on default, use ent_food_attr
-
     char food_display_char;
 
+    // special display if food has powerup
     switch (food->powerup)
     {
       case PU_SINGLESTEP:
@@ -91,7 +99,6 @@ void graphics_update(void)
         break;
     }
 
-    //mvaddch(food->y, food->x, ENT_FOOD_CH|ENT_FOOD_ATTR);
     mvaddch(food->y, food->x, food_display_char);
   }
 }
