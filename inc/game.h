@@ -124,8 +124,9 @@ struct game_updatecycle_info
 };
 
 // game status
-extern bool is_game_over;
-extern bool is_game_paused;
+extern unsigned int game_score;
+extern bool         is_game_over;
+extern bool         is_game_paused;
 
 // game area bounds
 extern unsigned int game_x_bound;
@@ -136,11 +137,11 @@ extern struct ent_food  * food;
 extern struct ent_snake * snake;
 
 // function declarations
-void    game_setup(unsigned int init_x, unsigned int init_y);
-bool    game_update(void);
-void    game_unset(void);
+void game_setup(unsigned int init_x, unsigned int init_y);
+bool game_update(void);
+void game_unset(void);
 
-void    snake_set_velocity(enum velocity_t velocity);
+void snake_set_velocity(enum velocity_t velocity);
 
 const char * powerup_get_name(enum powerup_t powerup);
 

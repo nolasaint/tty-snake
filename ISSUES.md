@@ -1,5 +1,9 @@
 ## KNOWN BUGS
 
+#### Gameplay
+
+* unable to capture Enter key (notice this on game over screen)
+
 #### Keyboard Input
 
 * if compiled to use the keyboard listener thread, a few issues arise:
@@ -11,11 +15,13 @@
 
 ## TO-DO
 
+#### Gameplay
+
+* implement gamestate_t enum (GAME_OVER, GAME_PAUSED, GAME_STARTING, GAME_RUNNING, etc)
+
 #### Scoring
 
-* implement scoring (factor of length, time, and food eaten, maybe?)
-
-* display score
+* change how scoring works (currently just increments when food is consumed, and takes snake length into account)
 
 #### Engine
 
@@ -34,4 +40,3 @@
 
 * [POSTPONED] add collision map (2D bool array with an entry for each coordinate)
 
-* when single-step powerup is active, disallow backtracking by checking the previous velocity

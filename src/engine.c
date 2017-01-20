@@ -119,13 +119,8 @@ void engine_start(void)
 
   // TODO maybe we should just break on is_game_over
   // engine tick
-  while (do_tick && !is_game_over)
+  while (do_tick) //&& !is_game_over)
   {
-//    struct timespec start_ts, end_ts;
-//    nanosecond_t    elapsed_ns;
-
-//    clock_gettime(CLOCK_ID, &start_ts);
-
     nanosecond_t start_ns, end_ns, elapsed_ns;
 
     start_ns = get_time_ns();
@@ -139,33 +134,21 @@ void engine_start(void)
     {
       case KEY_UP:
       case 'w':
-        /*if (snake->velocity != VEL_DOWN)
-          snake->prev_velocity = snake_velocity;
-          snake->velocity = VEL_UP;*/
         snake_set_velocity(VEL_UP);
         break;
 
       case KEY_RIGHT:
       case 'd':
-        /*if (snake->velocity != VEL_LEFT)
-          snake->prev_velocity = snake_velocity;
-          snake->velocity = VEL_RIGHT;*/
         snake_set_velocity(VEL_RIGHT);
         break;
 
       case KEY_DOWN:
       case 's':
-        /*if (snake->velocity != VEL_UP)
-          snake->prev_velocity = snake_velocity;
-          snake->velocity = VEL_DOWN;*/
         snake_set_velocity(VEL_DOWN);
         break;
 
       case KEY_LEFT:
       case 'a':
-        /*if (snake->velocity != VEL_RIGHT)
-          snake->prev_velocity = snake_velocity;
-          snake->velocity = VEL_LEFT;*/
         snake_set_velocity(VEL_LEFT);
         break;
 
@@ -180,6 +163,11 @@ void engine_start(void)
         // TODO but let engine still tick
         break;
 
+      // select an item (menu, etc)
+      case KEY_ENTER:
+        if (is_game_over)
+          goto quit;
+
       // quit immediately
       case QUIT_KEY:
         goto quit;
@@ -190,13 +178,12 @@ void engine_start(void)
 #endif
 
     // update entities and re-draw
-    game_update();
+    if (!is_game_over)
+      game_update();
+
     graphics_update();
 
     // limit engine tickrate
-//    clock_gettime(CLOCK_ID, &end_ts);
-
-//    elapsed_ns = TIMESPEC2NS(end_ts) - TIMESPEC2NS(start_ts);
     end_ns     = get_time_ns();
     elapsed_ns = end_ns - start_ns;
 
@@ -204,9 +191,7 @@ void engine_start(void)
     if (elapsed_ns < MAX_ELAPSED_NS)
     {
       struct timespec sleep_ts;
-//      ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &end_ts);
 
-//      nanosleep(&end_ts, NULL);
       ns2timespec(MAX_ELAPSED_NS - elapsed_ns, &sleep_ts);
       nanosleep(&sleep_ts, NULL);
     }

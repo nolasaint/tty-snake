@@ -24,6 +24,10 @@ struct ent_snake * snake;  // game.h
 // global variables
 static int old_curs;
 
+// private forward declarations
+static void draw_gameplay_screen(void);
+static void draw_gameover_screen(void);
+
 /**
  * function:  graphics_setup
  * -------------------------
@@ -57,16 +61,58 @@ void graphics_setup(void)
  */
 void graphics_update(void)
 {
+  // static enum gamestate_t prev_gamestate;
+
+  // TODO switch (gamestate)
+  if (is_game_over)
+    draw_gameover_screen();
+  else
+    draw_gameplay_screen();
+}
+
+/**
+ * function:  graphics_unset
+ * -------------------------
+ * uninitializes the graphics module.
+ */
+void graphics_unset(void)
+{
+  if (is_graphics_setup)
+  {
+    // ncurses unset
+    refresh();
+    curs_set(old_curs);
+    endwin();
+
+    is_graphics_setup = false;
+  }
+}
+
+
+/*
+ * screen functions
+ */
+
+/**
+ * function:  draw_gameplay_screen
+ * -------------------------------
+ * TODO - Documentation
+ */
+static void draw_gameplay_screen(void)
+{
   struct ent_snake_seg * dead_seg = snake->tail;
 
-  // TODO: check game state (game over? powerups?)
+  // TODO: check if game is paused (can use menus for this)
 
   // re-draw top border
   mvhline(0, 1, ACS_HLINE, game_x_bound - 2);
 
   // TODO show powerup time remaining
   // draw gamestate string
-  mvprintw(0, 2, "[ TTY-SNAKE | SCORE: %d | POWERUP: %s ]", 0, powerup_get_name(snake->powerup));
+  mvprintw(
+    0, 2, "[ TTY-SNAKE | SCORE: %d | POWERUP: %s ]",
+    game_score, powerup_get_name(snake->powerup)
+  );
 
   // erase dead segments from screen
   while (dead_seg && dead_seg->dying)
@@ -118,19 +164,14 @@ void graphics_update(void)
 }
 
 /**
- * function:  graphics_unset
- * -------------------------
- * uninitializes the graphics module.
+ * function:  draw_gameover_screen
+ * -------------------------------
+ * TODO - Documentation
  */
-void graphics_unset(void)
+static void draw_gameover_screen(void)
 {
-  if (is_graphics_setup)
-  {
-    // ncurses unset
-    refresh();
-    curs_set(old_curs);
-    endwin();
-
-    is_graphics_setup = false;
-  }
+  // TODO do we even want this as it's own screen?
+  mvprintw(0,0,"GAME OVER!");
+  mvprintw(1,0,"PRESS ENTER OR Q TO EXIT");
 }
+

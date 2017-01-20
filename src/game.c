@@ -13,6 +13,7 @@
 #include <ncurses.h>
 
 // external global variables
+unsigned int game_score;
 bool is_game_over;
 bool is_game_paused;
 struct ent_food  * food;
@@ -48,7 +49,9 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   // call other initialization functions
   powerup_init();
 
-  is_game_over = false;
+  game_score     = 0;
+  is_game_over   = false;
+  is_game_paused = false; 
 
   food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
@@ -167,6 +170,9 @@ bool game_update(void)
       // absorb food's powerup
       if (PU_NONE != food->powerup)
         powerup_activate(&uc_info, food->powerup);
+
+      // XXX for now, score updates whenever food is consumed
+      game_score += 1 + snake->length;
 
       // don't allow powerups to spawn if one is already active
       food_spawn(PU_NONE == snake->powerup);
