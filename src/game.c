@@ -13,9 +13,8 @@
 #include <ncurses.h>
 
 // external global variables
-unsigned int game_score;
-bool is_game_over;
-bool is_game_paused;
+enum gamestate_t game_state;
+unsigned int     game_score;
 struct ent_food  * food;
 struct ent_snake * snake;
 
@@ -49,9 +48,8 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   // call other initialization functions
   powerup_init();
 
-  game_score     = 0;
-  is_game_over   = false;
-  is_game_paused = false; 
+  game_state = GS_RUNNING; // TODO GS_STARTING initially, probs
+  game_score = 0;
 
   food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
@@ -216,9 +214,9 @@ bool game_update(void)
 
     // TODO other ways to lose / win?
     // TODO game over: win or lose? can you only lose?
-
     // check if game is over
-    is_game_over = is_colliding;
+    if (is_colliding)
+      game_state = GS_ENDING;
   }
 
   return true;

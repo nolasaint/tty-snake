@@ -22,16 +22,36 @@
 #include <global.h>
 
 /**
+ * enum:  gamestate_t
+ * ------------------
+ * TODO - Documentation
+ *
+ * GS_STARTING: game is not yet started (title screen) TODO
+ * GS_RUNNING:  game is running (being played)
+ * GS_PAUSED:   game is paused (but not over) TODO
+ * GS_ENDING:   game is over
+ * GS_COUNT:    number of game states
+ */
+enum gamestate_t
+{
+  GS_STARTING = 0,
+  GS_RUNNING,
+  GS_PAUSED,
+  GS_ENDING,
+  GS_COUNT
+};
+
+/**
  * enum:  velocity_t
  * -----------------
  * TODO - Documentation
  */
 enum velocity_t
 {
-  VEL_NONE  = 0,
-  VEL_UP    ,
-  VEL_RIGHT ,
-  VEL_DOWN  ,
+  VEL_NONE = 0,
+  VEL_UP,
+  VEL_RIGHT,
+  VEL_DOWN,
   VEL_LEFT
 };
 
@@ -124,9 +144,8 @@ struct game_updatecycle_info
 };
 
 // game status
-extern unsigned int game_score;
-extern bool         is_game_over;
-extern bool         is_game_paused;
+extern enum gamestate_t game_state;
+extern unsigned int     game_score;
 
 // game area bounds
 extern unsigned int game_x_bound;

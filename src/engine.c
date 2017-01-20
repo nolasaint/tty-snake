@@ -21,8 +21,7 @@
 // external global variables
 bool is_engine_running;     // engine.h
 
-bool is_game_over;          // game.h
-unsigned int game_x_bound;
+unsigned int game_x_bound;  // game.h
 unsigned int game_y_bound;
 struct ent_snake * snake;
 
@@ -165,7 +164,7 @@ void engine_start(void)
 
       // select an item (menu, etc)
       case KEY_ENTER:
-        if (is_game_over)
+        if (GS_ENDING == game_state)
           goto quit;
 
       // quit immediately
@@ -178,7 +177,7 @@ void engine_start(void)
 #endif
 
     // update entities and re-draw
-    if (!is_game_over)
+    if (GS_ENDING != game_state)
       game_update();
 
     graphics_update();

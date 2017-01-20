@@ -63,11 +63,28 @@ void graphics_update(void)
 {
   // static enum gamestate_t prev_gamestate;
 
-  // TODO switch (gamestate)
-  if (is_game_over)
-    draw_gameover_screen();
-  else
-    draw_gameplay_screen();
+  // determine what to display based on game state
+  switch (game_state)
+  {
+    // TODO - document
+    case GS_STARTING:
+      // TODO
+      break;
+
+    // draw game elements
+    case GS_RUNNING:
+      draw_gameplay_screen();
+      break;
+
+    case GS_PAUSED:
+      // TODO should probably still do draw_gameplay_screen
+      break;
+
+    // draw post-game stats
+    case GS_ENDING:
+      draw_gameover_screen();
+      break;  
+  }
 }
 
 /**

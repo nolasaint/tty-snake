@@ -17,7 +17,7 @@
 
 #### Gameplay
 
-* implement gamestate_t enum (GAME_OVER, GAME_PAUSED, GAME_STARTING, GAME_RUNNING, etc)
+* implement the the rest of the game states (GS_STARTING, GS_PAUSED, etc)
 
 #### Scoring
 
