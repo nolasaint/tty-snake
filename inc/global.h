@@ -10,8 +10,9 @@
 #define GLOBAL_H
 
 // global-use headers
-#include <stdint.h> // uint64_t
-#include <time.h>   // struct timespec
+#include <ncurses.h> // WINDOW
+#include <stdint.h>  // uint64_t
+#include <time.h>    // struct timespec
 
 // compilation options
 #define DEBUG
@@ -64,6 +65,10 @@ typedef uint64_t second_t;
 
 #define TIMESPEC2NS(ts) (S2NS((ts).tv_sec) + (ts).tv_nsec)
 #define TIMESPEC2MS(ts) (S2MS((ts).tv_sec) + NS2MS((ts).tv_nsec))
+
+/* ncurses additional functions */
+WINDOW * nc_window_create(int height, int width, int y, int x);
+void     nc_window_destroy(WINDOW * win, bool should_erase);
 
 millisecond_t get_time_ms(void);
 nanosecond_t  get_time_ns(void);

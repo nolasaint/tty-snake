@@ -162,6 +162,8 @@ void game_unset(void);
 
 void snake_set_velocity(enum velocity_t velocity);
 
-const char * powerup_get_name(enum powerup_t powerup);
+const char * gamestate_to_string(enum gamestate_t gamestate);
+//const char * velocity_to_string(enum velocity_t velocity);
+const char * powerup_to_string(enum powerup_t powerup);
 
 #endif // GAME_H

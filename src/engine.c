@@ -156,10 +156,11 @@ void engine_start(void)
         break;
 
       case PAUSE_KEY:
-        // TODO add pause functionality
-        // TODO is_paused = true;
-        // TODO check is_paused before input, or any updates
-        // TODO but let engine still tick
+        // TODO use gamestate_set()
+        if (GS_RUNNING == game_state)
+          game_state = GS_PAUSED;
+        else if (GS_PAUSED == game_state)
+          game_state = GS_RUNNING;
         break;
 
       // select an item (menu, etc)

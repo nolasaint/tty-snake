@@ -10,7 +10,39 @@
 
 #include <global.h>
 
-/*
+/**
+ * function:  nc_window_create
+ * ---------------------------
+ * TODO - documentation
+ */
+WINDOW * nc_window_create(int height, int width, int y, int x)
+{
+  return newwin(height, width, y, x);
+}
+
+/**
+ * function:  nc_window_destroy
+ * ----------------------------
+ * TODO - documentation
+ */
+void nc_window_destroy(WINDOW * win, bool should_erase)
+{
+  if (win)
+  {
+    // erase old window's border
+    if (should_erase)
+    {
+      werase(win);
+      //wborder(win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+      wrefresh(win);
+      refresh();
+    }
+
+    delwin(win);
+  }
+}
+
+/**
  * function:  get_time_ms
  * ----------------------
  * TODO - documentation
@@ -24,7 +56,7 @@ millisecond_t get_time_ms(void)
   return (millisecond_t) TIMESPEC2MS(ts);
 }
 
-/*
+/**
  * function:  get_time_ns
  * ----------------------
  * TODO - documentation

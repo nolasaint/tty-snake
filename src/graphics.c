@@ -22,12 +22,14 @@ struct ent_food  * food;   // game.h
 struct ent_snake * snake;  // game.h
 
 // global variables
-static int old_curs;
+static int      old_curs;
+static WINDOW * popup_win = NULL;
 
 // private forward declarations
 static void draw_titlebar(void);
-static void draw_gs_running(void);
-static void draw_gs_ending(void);
+static void draw_gs_paused(bool);
+static void draw_gs_running(bool);
+static void draw_gs_ending(bool);
 
 /**
  * function:  graphics_setup
@@ -46,7 +48,7 @@ void graphics_setup(void)
     cbreak();
     getmaxyx(stdscr, game_y_bound, game_x_bound);
 
-    old_curs = curs_set(0);
+    old_curs  = curs_set(0);
 
     // draw game area boundary (use defaults since they look pretty)
     border(0,0,0,0,0,0,0,0);
@@ -62,7 +64,18 @@ void graphics_setup(void)
  */
 void graphics_update(void)
 {
-  // static enum gamestate_t prev_gamestate;
+  // initially use illegal state so prev_game_state != game_state initially
+  static enum gamestate_t prev_game_state = GS_COUNT;
+  bool is_gamestate_change                = (prev_game_state != game_state);
+
+  draw_titlebar();
+
+  // close popup window if changing states
+  if (is_gamestate_change)
+  {
+    nc_window_destroy(popup_win, true);
+    popup_win = NULL;
+  }
 
   // determine what to display based on game state
   switch (game_state)
@@ -74,18 +87,21 @@ void graphics_update(void)
 
     // draw game elements
     case GS_RUNNING:
-      draw_gs_running();
+      draw_gs_running(is_gamestate_change);
       break;
 
+    // draw pause menu
     case GS_PAUSED:
-      // TODO should probably still do draw_gameplay_screen
+      draw_gs_paused(is_gamestate_change);
       break;
 
     // draw post-game stats
     case GS_ENDING:
-      draw_gs_ending();
+      draw_gs_ending(is_gamestate_change);
       break;  
   }
+
+  prev_game_state = game_state;
 }
 
 /**
@@ -97,6 +113,8 @@ void graphics_unset(void)
 {
   if (is_graphics_setup)
   {
+    nc_window_destroy(popup_win, false);
+
     // ncurses unset
     refresh();
     curs_set(old_curs);
@@ -106,6 +124,7 @@ void graphics_unset(void)
   }
 }
 
+
 /**
  * function:  draw_titlebar
  * ------------------------
@@ -113,8 +132,18 @@ void graphics_unset(void)
  */
 static void draw_titlebar(void)
 {
-  
+  // re-draw top border
+  mvhline(0, 1, ACS_HLINE, game_x_bound - 2);
+
+  // TODO show powerup time remaining
+  // draw gamestate string
+  mvprintw(0, 2, "[ %s | SCORE: %d | POWERUP: %s ]",
+    gamestate_to_string(game_state),
+    game_score,
+    powerup_to_string(snake->powerup)
+  ); 
 }
+
 
 /*
  * Per-gamestate update functions
@@ -124,23 +153,38 @@ static void draw_titlebar(void)
  * function:  draw_gs_running
  * --------------------------
  * TODO - Documentation
- * TODO - take in boolean to designate if gamestate change has occurred
  */
-static void draw_gs_running(void)
+static void draw_gs_paused(bool is_gamestate_change)
+{
+  if (is_gamestate_change)
+  {
+    int height = 6,
+        width  = 50,
+        starty = (LINES - height) / 2,
+        startx = (COLS - width) / 2;
+
+    // create the popup window
+    popup_win = nc_window_create(height, width, starty, startx);
+
+    // draw box around popup window
+    box(popup_win, 0, 0);
+
+    mvwprintw(popup_win, 1, 1, "GAME PAUSED");
+    mvwprintw(popup_win, 2, 1, "PRESS P TO UNPAUSE");
+
+    wrefresh(popup_win);
+
+  }
+}
+
+/**
+ * function:  draw_gs_running
+ * --------------------------
+ * TODO - Documentation
+ */
+static void draw_gs_running(bool is_gamestate_change)
 {
   struct ent_snake_seg * dead_seg = snake->tail;
-
-  // TODO: check if game is paused (can use menus for this)
-
-  // re-draw top border
-  mvhline(0, 1, ACS_HLINE, game_x_bound - 2);
-
-  // TODO show powerup time remaining
-  // draw gamestate string
-  mvprintw(
-    0, 2, "[ TTY-SNAKE | SCORE: %d | POWERUP: %s ]",
-    game_score, powerup_get_name(snake->powerup)
-  );
 
   // erase dead segments from screen
   while (dead_seg && dead_seg->dying)
@@ -196,10 +240,25 @@ static void draw_gs_running(void)
  * -------------------------
  * TODO - Documentation
  */
-static void draw_gs_ending(void)
+static void draw_gs_ending(bool is_gamestate_change)
 {
-  // TODO do we even want this as it's own screen?
-  mvprintw(0,0,"GAME OVER!");
-  mvprintw(1,0,"PRESS ENTER OR Q TO EXIT");
+  if (is_gamestate_change)
+  {
+    int height = 6,
+        width  = 50,
+        starty = (LINES - height) / 2,
+        startx = (COLS - width) / 2;
+
+    // create the popup window
+    popup_win = nc_window_create(height, width, starty, startx);
+
+    // draw box around popup window
+    box(popup_win, 0, 0);
+
+    mvwprintw(popup_win, 1, 1, "GAME OVER!");
+    mvwprintw(popup_win, 2, 1, "Q TO QUIT");
+
+    wrefresh(popup_win);
+  }
 }
 

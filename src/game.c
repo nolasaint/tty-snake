@@ -20,7 +20,6 @@ struct ent_snake * snake;
 
 // global variables
 static nanosecond_t powerup_durations[PU_COUNT];
-static const char * powerup_names[PU_COUNT + 1]; // include PU_NONE
 
 // private forward declarations
 static void food_spawn(bool);
@@ -111,22 +110,24 @@ bool game_update(void)
     free(old_tail);
   }
 
-  // update uc_info based on powerup, if one is active
-  powerup_tick(&uc_info, true);
-
-  // update head if snake is moving
-  if (snake->velocity != VEL_NONE)
+  if (GS_PAUSED != game_state)
   {
-    // update snake's x or y coordinate based on velocity, if allowed
-    if (uc_info.snake_should_move)
-    {
-      switch (snake->velocity)
-      {
-        case VEL_UP:
-          uc_info.snake_dy = -1;
-          break;
+    // update uc_info based on powerup, if one is active
+    powerup_tick(&uc_info, true);
 
-        case VEL_RIGHT:
+    // update head if snake is moving
+    if (snake->velocity != VEL_NONE)
+    {
+      // update snake's x or y coordinate based on velocity, if allowed
+      if (uc_info.snake_should_move)
+      {
+        switch (snake->velocity)
+        {
+          case VEL_UP:
+            uc_info.snake_dy = -1;
+            break;
+
+         case VEL_RIGHT:
          uc_info.snake_dx = 1;
           break;
 
@@ -217,6 +218,9 @@ bool game_update(void)
     // check if game is over
     if (is_colliding)
       game_state = GS_ENDING;
+  }
+ 
+
   }
 
   return true;
@@ -328,18 +332,53 @@ void snake_set_velocity(enum velocity_t velocity)
 }
 
 
+/**
+ * gamestate functions
+ */
+
+/**
+ * function:  gamestate_to_string
+ * ------------------------------
+ * TODO - Documentation
+ */
+const char * gamestate_to_string(enum gamestate_t gamestate)
+{
+  const char * gamestate_names[GS_COUNT];
+
+  gamestate_names[GS_STARTING] = "WELCOME";
+  gamestate_names[GS_RUNNING]  = "TTY-SNAKE";
+  gamestate_names[GS_PAUSED]   = "PAUSED";
+  gamestate_names[GS_ENDING]   = "GAME OVER";
+
+
+  if (GS_COUNT == gamestate)
+    return NULL;
+  else
+    return gamestate_names[gamestate];
+}
+
+
 /*
  * powerup functions
  */
 
 /**
- * function:  powerup_get_name
- * ---------------------------
+ * function:  powerup_to_string
+ * ----------------------------
  * TODO - Documentation
  */
-const char * powerup_get_name(enum powerup_t powerup)
+const char * powerup_to_string(enum powerup_t powerup)
 {
-  return powerup_names[powerup + 1];
+  const char * powerup_names[PU_COUNT + 1]; // +1 to include PU_NONE
+
+  powerup_names[PU_NONE + 1]        = "NONE";
+  powerup_names[PU_SINGLESTEP + 1]  = "SINGLE-STEP";
+  powerup_names[PU_NOGROW + 1]      = "NO GROW";
+
+  if (PU_COUNT == powerup)
+    return NULL;
+  else
+    return powerup_names[powerup + 1];
 }
 
 /**
@@ -351,12 +390,7 @@ static void powerup_init(void)
 {
   // initialize powerup durations
   powerup_durations[PU_SINGLESTEP] = (nanosecond_t) PU_SINGLESTEP_DUR * SECONDS;
-  powerup_durations[PU_NOGROW]     = (nanosecond_t) PU_NOGROW_DUR * SECONDS;
-
-  // initialize powerup names
-  powerup_names[PU_NONE + 1]        = "NONE";
-  powerup_names[PU_SINGLESTEP + 1]  = "SINGLE-STEP";
-  powerup_names[PU_NOGROW + 1]      = "NO GROW";
+  powerup_durations[PU_NOGROW]     = (nanosecond_t) PU_NOGROW_DUR * SECONDS; 
 }
 
 /**

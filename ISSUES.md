@@ -4,6 +4,8 @@
 
 * unable to capture Enter key (notice this on game over screen)
 
+* if game is paused, powerup timer still decreases
+
 #### Keyboard Input
 
 * if compiled to use the keyboard listener thread, a few issues arise:
