@@ -12,14 +12,14 @@
   * snake movement becomes buggy
   * have to handle signals/interrupts inside pthread so that exiting does not require extra input
 
-* if the kyeboard input thread is NOT used, input will be buffered and can be read late
+* if the keyboard input thread is NOT used, input will be buffered and can be read late
   * can be seen clearly when in single-step mode and holding down a directional arrow, then letting go
 
 ## TO-DO
 
 #### Gameplay
 
-* implement the the rest of the game states (GS_STARTING, GS_PAUSED, etc)
+* allow game to be restarted from GS_ENDING
 
 #### Scoring
 

@@ -28,6 +28,13 @@ struct ent_snake * snake;
 // global variables
 static bool do_tick; // whether the engine should keep running
 
+// private forward declarations
+static void input_gshandle_starting(int input_ch);
+static void input_gshandle_running(int input_ch);
+static void input_gshandle_paused(int input_ch);
+static void input_gshandle_ending(int input_ch);
+static void _engine_stop(void);
+
 #ifdef USE_KB_LISTEN_THREAD
 static int  last_ch; // most recently input key
 
@@ -63,33 +70,113 @@ static void * kb_listen(void * arg)
 }
 #endif // USE_KB_LISTEN_THREAD
 
-/**
- * function:  _engine_stop
- * -----------------------
- * stops the engine normally.
- *
- * TODO could just do this at end of engine_start
+
+/*
+ * per-gamestate input handler functions
  */
-static void _engine_stop(void)
+
+/**
+ * function:  input_gshandle_starting
+ * ----------------------------------
+ * TODO - documentation
+ */
+static void input_gshandle_starting(int input_ch)
 {
-  // unset modules
-  graphics_unset();
-  game_unset();
+  switch (input_ch)
+  {
+    // on no input, do nothing
+    case ERR:
+      break;
 
-#ifdef USE_KB_LISTEN_THREAD
-  // signal and wait for kb listen thread to stop
-  do_kb_listen = false;
-
-  pthread_join(kb_listen_threadid, NULL);
-#endif
-
-  is_engine_running = false;
+    // any keypress advances the game
+    default:
+      gamestate_set(GS_RUNNING);
+      break;
+  }
 }
 
-//static inline void tick(void)
-//{
-//
-//}
+/**
+ * function:  input_gshandle_running
+ * ---------------------------------
+ * TODO - documentation
+ */
+static void input_gshandle_running(int input_ch)
+{
+  switch (input_ch)
+  {
+    case KEY_UP:
+    case 'w':
+      snake_set_velocity(VEL_UP);
+      break;
+
+    case KEY_RIGHT:
+    case 'd':
+      snake_set_velocity(VEL_RIGHT);
+      break;
+
+    case KEY_DOWN:
+    case 's':
+      snake_set_velocity(VEL_DOWN);
+      break;
+
+    case KEY_LEFT:
+    case 'a':
+      snake_set_velocity(VEL_LEFT);
+      break;
+
+    // pause the game
+    case PAUSE_KEY:
+      gamestate_set(GS_PAUSED);
+      break;
+
+    // quit the game
+    case QUIT_KEY:
+      gamestate_set(GS_ENDING);
+      break;
+  }
+}
+
+/**
+ * function:  input_gshandle_paused
+ * --------------------------------
+ * TODO - documentation
+ */
+static void input_gshandle_paused(int input_ch)
+{
+  switch (input_ch)
+  {
+    // unpause the game
+    case PAUSE_KEY:
+      gamestate_set(GS_RUNNING);
+      break;
+
+    // quit the game
+    case QUIT_KEY:
+      gamestate_set(GS_ENDING);
+      break;
+  }
+}
+
+/**
+ * function:  input_gshandle_ending
+ * --------------------------------
+ * TODO - documentation
+ */
+static void input_gshandle_ending(int input_ch)
+{
+  switch (input_ch)
+  {
+    // on no input, do nothing
+    case ERR:
+      break;
+
+    // any keypress stops the game
+    default:
+      do_tick = false;
+      break;
+  }
+}
+
 
 /**
  * function:  engine_start
@@ -116,61 +203,39 @@ void engine_start(void)
   timeout(0);
 #endif
 
-  // TODO maybe we should just break on is_game_over
   // engine tick
-  while (do_tick) //&& !is_game_over)
+  while (do_tick)
   {
+    int          input_ch;
     nanosecond_t start_ns, end_ns, elapsed_ns;
 
     start_ns = get_time_ns();
 
     // check for keyboard input
 #ifdef USE_KB_LISTEN_THREAD
-    switch (last_ch)
+    input_ch = last_ch;
 #else
-    switch (getch())
+    input_ch = getch();
 #endif
+
+    // handle input based on current state
+    switch (game_state)
     {
-      case KEY_UP:
-      case 'w':
-        snake_set_velocity(VEL_UP);
+      case GS_STARTING:
+        input_gshandle_starting(input_ch);
         break;
 
-      case KEY_RIGHT:
-      case 'd':
-        snake_set_velocity(VEL_RIGHT);
+      case GS_RUNNING:
+        input_gshandle_running(input_ch);
         break;
 
-      case KEY_DOWN:
-      case 's':
-        snake_set_velocity(VEL_DOWN);
+      case GS_PAUSED:
+        input_gshandle_paused(input_ch);
         break;
 
-      case KEY_LEFT:
-      case 'a':
-        snake_set_velocity(VEL_LEFT);
+      case GS_ENDING:
+        input_gshandle_ending(input_ch);
         break;
-
-      // ignore getch() returning from timeout()
-      case ERR:
-        break;
-
-      // (attempt to) enter or exit the paused state
-      case PAUSE_KEY:
-        if (GS_RUNNING == game_state)
-          gamestate_set(GS_PAUSED);
-        else if (GS_PAUSED == game_state)
-          gamestate_set(GS_RUNNING);
-        break;
-
-      // select an item (menu, etc)
-      case KEY_ENTER:
-        if (GS_ENDING == game_state)
-          goto quit;
-
-      // quit immediately
-      case QUIT_KEY:
-        goto quit;
     }
 
 #ifdef USE_KB_LISTEN_THREAD
@@ -197,7 +262,6 @@ void engine_start(void)
     }
   } // end of tick loop
 
-quit:
   _engine_stop();
 }
 
@@ -211,3 +275,27 @@ void engine_stop(void)
   // signal the engine to stop and wait for normal termination
   do_tick = false;
 }
+
+/**
+ * function:  _engine_stop
+ * -----------------------
+ * stops the engine normally.
+ *
+ * TODO could just do this at end of engine_start
+ */
+static void _engine_stop(void)
+{
+  // unset modules
+  graphics_unset();
+  game_unset();
+
+#ifdef USE_KB_LISTEN_THREAD
+  // signal and wait for kb listen thread to stop
+  do_kb_listen = false;
+
+  pthread_join(kb_listen_threadid, NULL);
+#endif
+
+  is_engine_running = false;
+}
+

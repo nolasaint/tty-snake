@@ -47,7 +47,7 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   // call other initialization functions
   powerup_init();
 
-  game_state = GS_RUNNING; // TODO GS_STARTING initially, probs
+  game_state = GS_STARTING;
   game_score = 0;
 
   food  = calloc(1, sizeof(struct ent_food));
@@ -110,7 +110,7 @@ bool game_update(void)
     free(old_tail);
   }
 
-  if (GS_PAUSED != game_state)
+  if (GS_RUNNING == game_state)
   {
     // update uc_info based on powerup, if one is active
     powerup_tick(&uc_info, true);
@@ -127,100 +127,98 @@ bool game_update(void)
             uc_info.snake_dy = -1;
             break;
 
-         case VEL_RIGHT:
-         uc_info.snake_dx = 1;
-          break;
+          case VEL_RIGHT:
+            uc_info.snake_dx = 1;
+            break;
 
-        case VEL_DOWN:
-          uc_info.snake_dy = 1;
-          break;
+          case VEL_DOWN:
+            uc_info.snake_dy = 1;
+            break;
 
-       case VEL_LEFT:
-          uc_info.snake_dx = -1;
-          break;
-      }
-    }
-
-    // set up new_seg
-    new_seg = malloc(sizeof(struct ent_snake_seg));
-
-    // check if allocation failed
-    if (!new_seg)
-      quit(); // TODO maybe use a diff function if quit() doesnt behave
-
-    *new_seg = (struct ent_snake_seg) {
-      .dying = false,
-      .x = snake->head->x + uc_info.snake_dx,
-      .y = snake->head->y + uc_info.snake_dy,
-      .prev  = NULL,
-      .next  = snake->head
-    };
-
-    snake->head->prev = new_seg;
-    snake->head = new_seg;
-    snake->length++;
-
-    // check if snake consumed food
-    if (!food->consumed && ARE_COLLIDING(food, snake->head))
-    {
-      should_grow    = true;
-      food->consumed = true;
-
-      // absorb food's powerup
-      if (PU_NONE != food->powerup)
-        powerup_activate(&uc_info, food->powerup);
-
-      // XXX for now, score updates whenever food is consumed
-      game_score += 1 + snake->length;
-
-      // don't allow powerups to spawn if one is already active
-      food_spawn(PU_NONE == snake->powerup);
-    }
-
-    // pop tail and mark dying if snake is not growing
-    if (!uc_info.snake_can_grow || !should_grow)
-    {
-      snake->tail->dying = true;
-      snake->length--;
-    }
-
-    // collision detection: ent_snake segments
-    if (snake->length > 1)
-    {
-      struct ent_snake_seg * check_seg = snake->head->next;
-
-      while (check_seg && !check_seg->dying)
-      {
-        if (ARE_COLLIDING(snake->head, check_seg))
-        {
-          is_colliding = true;
-          break;
+          case VEL_LEFT:
+            uc_info.snake_dx = -1;
+            break;
         }
-
-        check_seg = check_seg->next;
       }
+
+      // set up new_seg
+      new_seg = malloc(sizeof(struct ent_snake_seg));
+
+      // check if allocation failed
+      if (!new_seg)
+        quit(); // TODO maybe use a diff function if quit() doesnt behave
+
+      *new_seg = (struct ent_snake_seg) {
+        .dying = false,
+        .x = snake->head->x + uc_info.snake_dx,
+        .y = snake->head->y + uc_info.snake_dy,
+        .prev  = NULL,
+        .next  = snake->head
+      };
+
+      snake->head->prev = new_seg;
+      snake->head = new_seg;
+      snake->length++;
+
+      // check if snake consumed food
+      if (!food->consumed && ARE_COLLIDING(food, snake->head))
+      {
+        should_grow    = true;
+        food->consumed = true;
+
+        // absorb food's powerup
+        if (PU_NONE != food->powerup)
+          powerup_activate(&uc_info, food->powerup);
+
+        // XXX for now, score updates whenever food is consumed
+        game_score += 1 + snake->length;
+
+        // don't allow powerups to spawn if one is already active
+        food_spawn(PU_NONE == snake->powerup);
+      }
+
+      // pop tail and mark dying if snake is not growing
+      if (!uc_info.snake_can_grow || !should_grow)
+      {
+        snake->tail->dying = true;
+        snake->length--;
+      }
+
+      // collision detection: ent_snake segments
+      if (snake->length > 1)
+      {
+        struct ent_snake_seg * check_seg = snake->head->next;
+
+        while (check_seg && !check_seg->dying)
+        {
+          if (ARE_COLLIDING(snake->head, check_seg))
+          {
+            is_colliding = true;
+            break;
+          }
+
+          check_seg = check_seg->next;
+        }
+      }
+
+      // collision detection: walls
+      if (!is_colliding)
+      {
+        is_colliding = (
+          snake->head->x <= 0 || snake->head->x >= game_x_bound - 1
+          || snake->head->y <= 0 || snake->head->y >= game_y_bound - 1
+        );
+      }
+
+      // update snake velocity (usually due to powerups)
+      snake_set_velocity(uc_info.snake_new_velocity);
+
+      // TODO other ways to lose / win?
+      // TODO game over: win or lose? can you only lose?
+      // check if game is over
+      if (is_colliding)
+        game_state = GS_ENDING;
     }
-
-    // collision detection: walls
-    if (!is_colliding)
-    {
-      is_colliding = (
-        snake->head->x <= 0 || snake->head->x >= game_x_bound - 1
-        || snake->head->y <= 0 || snake->head->y >= game_y_bound - 1
-      );
-    }
-
-    // update snake velocity (usually due to powerups)
-    snake_set_velocity(uc_info.snake_new_velocity);
-
-    // TODO other ways to lose / win?
-    // TODO game over: win or lose? can you only lose?
-    // check if game is over
-    if (is_colliding)
-      game_state = GS_ENDING;
-  }
- 
-
   }
 
   return true;
@@ -356,7 +354,10 @@ bool gamestate_set(enum gamestate_t gamestate)
   // configure illegal state transitions
   switch (game_state)
   {
-    // TODO handle GS_STARTING
+    // from GS_STARTING, we can only enter GS_RUNNING or GS_ENDING
+    case GS_STARTING:
+      can_enter_state = (GS_RUNNING == gamestate || GS_ENDING == gamestate);
+      break;
 
     // from GS_RUNNING, we can only enter GS_PAUSED or GS_ENDING
     case GS_RUNNING:
@@ -372,6 +373,7 @@ bool gamestate_set(enum gamestate_t gamestate)
     // TODO handle restarting game from game over screen
     case GS_ENDING:
       can_enter_state = (GS_STARTING == gamestate);
+      break;
 
     // by default we can enter this new state
     default:

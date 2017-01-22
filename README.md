@@ -63,6 +63,7 @@ Controls:
 | A | change the velocity to leftward (also: left arrow) |
 | S | change the velocity to downward (also: down arrow) |
 | D | change the velocity to rightward (also: right arrow) |
+| P | pause the game |
 | Q | quit the game |
 
 

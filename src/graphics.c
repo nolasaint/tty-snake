@@ -28,8 +28,10 @@ static WINDOW * popup_win = NULL;
 // private forward declarations
 static void draw_titlebar(void);
 static void draw_lines_centered(WINDOW*,const char**,size_t);
-static void draw_gs_paused(bool);
+
+static void draw_gs_starting(bool);
 static void draw_gs_running(bool);
+static void draw_gs_paused(bool);
 static void draw_gs_ending(bool);
 
 /**
@@ -81,9 +83,9 @@ void graphics_update(void)
   // determine what to display based on game state
   switch (game_state)
   {
-    // TODO - document
+    // draw the pre-game welcome message
     case GS_STARTING:
-      // TODO
+      draw_gs_starting(is_gamestate_change);
       break;
 
     // draw game elements
@@ -183,8 +185,41 @@ static void draw_lines_centered(WINDOW * win, const char ** lines, size_t nlines
 }
 
 /**
- * function:  draw_gs_running
- * --------------------------
+ * function:  draw_gs_starting
+ * ---------------------------
+ * TODO - Documentation
+ */
+static void draw_gs_starting(bool is_gamestate_change)
+{
+  if (is_gamestate_change)
+  {
+    // lines to display (centered horiz. and vert.)
+    const char * lines[2] = {
+      "TTY-SNAKE         v0.0",
+      "PRESS ANY KEY TO START"
+    };
+
+    int win_height = WIN_STARTING_HEIGHT,
+        win_width  = WIN_STARTING_WIDTH,
+        win_y      = (LINES - win_height) / 2,
+        win_x      = (COLS - win_width) / 2;
+
+    // create the popup window
+    popup_win = nc_window_create(win_height, win_width, win_y, win_x);
+
+    // draw box around popup window
+    box(popup_win, 0, 0);
+
+    // display window text
+    draw_lines_centered(popup_win, lines, sizeof(lines) / sizeof(lines[0]));
+
+    wrefresh(popup_win);
+  }
+}
+
+/**
+ * function:  draw_gs_paused
+ * -------------------------
  * TODO - Documentation
  */
 static void draw_gs_paused(bool is_gamestate_change)
@@ -285,7 +320,7 @@ static void draw_gs_ending(bool is_gamestate_change)
     // lines to display (centered horiz. and vert.)
     const char * lines[2] = {
       "GAME OVER",
-      "PRESS Q TO QUIT"
+      "PRESS ANY KEY TO EXIT"
     };
 
     int win_height = WIN_GAMEOVER_HEIGHT,
