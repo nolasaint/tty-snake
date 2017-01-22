@@ -27,6 +27,13 @@
 #define ENT_FOOD_ATTR       A_NORMAL
 #define ENT_FOOD_DISP       ENT_FOOD_CH | ENT_FOOD_ATTR
 
+// popup window dimensions
+#define WIN_PAUSE_HEIGHT  6
+#define WIN_PAUSE_WIDTH   50
+
+#define WIN_GAMEOVER_HEIGHT 6
+#define WIN_GAMEOVER_WIDTH  50
+
 #include <global.h>
 
 extern bool is_graphics_setup;

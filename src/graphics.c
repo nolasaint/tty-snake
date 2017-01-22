@@ -27,6 +27,7 @@ static WINDOW * popup_win = NULL;
 
 // private forward declarations
 static void draw_titlebar(void);
+static void draw_lines_centered(WINDOW*,const char**,size_t);
 static void draw_gs_paused(bool);
 static void draw_gs_running(bool);
 static void draw_gs_ending(bool);
@@ -150,6 +151,38 @@ static void draw_titlebar(void)
  */
 
 /**
+ * function:  draw_lines_centered
+ * ------------------------------
+ * draws the provided lines of characters to the specified window, centering
+ * them vertically and horizontally.
+ *
+ * TODO - rest of documentation
+ */
+static void draw_lines_centered(WINDOW * win, const char ** lines, size_t nlines)
+{
+  int    win_height, win_width;
+  size_t i;
+
+  // fetch window height and width
+  getmaxyx(win, win_height, win_width);
+
+  // print all lines, centered
+  for (i = 0; i < nlines; i++)
+  {
+    size_t line_len = strlen(lines[i]);
+
+    // don't bother printing blank lines
+    if (line_len > 0)
+    {
+      int line_y = (win_height / 2) + 1 - (nlines - i);
+      int line_x = (win_width / 2) - (line_len / 2);
+
+      mvwprintw(win, line_y, line_x, lines[i]);
+    }
+  }
+}
+
+/**
  * function:  draw_gs_running
  * --------------------------
  * TODO - Documentation
@@ -158,22 +191,27 @@ static void draw_gs_paused(bool is_gamestate_change)
 {
   if (is_gamestate_change)
   {
-    int height = 6,
-        width  = 50,
-        starty = (LINES - height) / 2,
-        startx = (COLS - width) / 2;
+    // lines to display (centered horiz. and vert.)
+    const char * lines[2] = {
+      "GAME PAUSED",
+      "PRESS P TO UNPAUSE"
+    };
+
+    int win_height = WIN_PAUSE_HEIGHT,
+        win_width  = WIN_PAUSE_WIDTH,
+        win_y      = (LINES - win_height) / 2,
+        win_x      = (COLS - win_width) / 2;
 
     // create the popup window
-    popup_win = nc_window_create(height, width, starty, startx);
+    popup_win = nc_window_create(win_height, win_width, win_y, win_x);
 
     // draw box around popup window
     box(popup_win, 0, 0);
 
-    mvwprintw(popup_win, 1, 1, "GAME PAUSED");
-    mvwprintw(popup_win, 2, 1, "PRESS P TO UNPAUSE");
+    // display window text
+    draw_lines_centered(popup_win, lines, sizeof(lines) / sizeof(lines[0]));
 
     wrefresh(popup_win);
-
   }
 }
 
@@ -244,19 +282,25 @@ static void draw_gs_ending(bool is_gamestate_change)
 {
   if (is_gamestate_change)
   {
-    int height = 6,
-        width  = 50,
-        starty = (LINES - height) / 2,
-        startx = (COLS - width) / 2;
+    // lines to display (centered horiz. and vert.)
+    const char * lines[2] = {
+      "GAME OVER",
+      "PRESS Q TO QUIT"
+    };
+
+    int win_height = WIN_GAMEOVER_HEIGHT,
+        win_width  = WIN_GAMEOVER_WIDTH,
+        win_y      = (LINES - win_height) / 2,
+        win_x      = (COLS - win_width) / 2;
 
     // create the popup window
-    popup_win = nc_window_create(height, width, starty, startx);
+    popup_win = nc_window_create(win_height, win_width, win_y, win_x);
 
     // draw box around popup window
     box(popup_win, 0, 0);
 
-    mvwprintw(popup_win, 1, 1, "GAME OVER!");
-    mvwprintw(popup_win, 2, 1, "Q TO QUIT");
+    // display window text
+    draw_lines_centered(popup_win, lines, sizeof(lines) / sizeof(lines[0]));
 
     wrefresh(popup_win);
   }

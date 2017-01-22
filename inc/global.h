@@ -12,6 +12,7 @@
 // global-use headers
 #include <ncurses.h> // WINDOW
 #include <stdint.h>  // uint64_t
+#include <string.h>
 #include <time.h>    // struct timespec
 
 // compilation options

@@ -33,12 +33,12 @@ void nc_window_destroy(WINDOW * win, bool should_erase)
     if (should_erase)
     {
       werase(win);
-      //wborder(win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+      wborder(win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
       wrefresh(win);
-      refresh();
     }
 
     delwin(win);
+    //refresh();
   }
 }
 
