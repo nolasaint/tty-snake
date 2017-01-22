@@ -8,11 +8,25 @@ SRC     := $(wildcard $(SRC_DIR)/*.c)
 OBJ     := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CC      := gcc
-CFLAGS  := -I$(INC_DIR) -g3
+CFLAGS  := -I$(INC_DIR)
 LDFLAGS := -lncurses -lpthread
+
+
+#
+# Special compilation rules
+#
+
+# list of non-file ("phony") targets
+.PHONY: all clean debug info makedir
 
 # define default target
 all: makedir tty-snake
+
+
+
+#
+# Custom compilation rules
+#
 
 # define how all c files will compile
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEP)
@@ -21,6 +35,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEP)
 # primary compilation target
 tty-snake: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+# remove compiled files
+clean:
+	rm ./tty-snake $(OBJ_DIR)/*.o
+
+# debugging uses g3 no-optimization flag
+debug:	CFLAGS += -g3
+debug:	all
 
 # display files used in compilation
 info:
@@ -32,7 +54,3 @@ info:
 makedir:
 	mkdir -p $(OBJ_DIR)
 
-.PHONY: all clean info makedir
-
-clean:
-	rm ./tty-snake $(OBJ_DIR)/*.o

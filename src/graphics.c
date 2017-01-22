@@ -25,8 +25,9 @@ struct ent_snake * snake;  // game.h
 static int old_curs;
 
 // private forward declarations
-static void draw_gameplay_screen(void);
-static void draw_gameover_screen(void);
+static void draw_titlebar(void);
+static void draw_gs_running(void);
+static void draw_gs_ending(void);
 
 /**
  * function:  graphics_setup
@@ -73,7 +74,7 @@ void graphics_update(void)
 
     // draw game elements
     case GS_RUNNING:
-      draw_gameplay_screen();
+      draw_gs_running();
       break;
 
     case GS_PAUSED:
@@ -82,7 +83,7 @@ void graphics_update(void)
 
     // draw post-game stats
     case GS_ENDING:
-      draw_gameover_screen();
+      draw_gs_ending();
       break;  
   }
 }
@@ -105,17 +106,27 @@ void graphics_unset(void)
   }
 }
 
+/**
+ * function:  draw_titlebar
+ * ------------------------
+ * TODO - Documentation
+ */
+static void draw_titlebar(void)
+{
+  
+}
 
 /*
- * screen functions
+ * Per-gamestate update functions
  */
 
 /**
- * function:  draw_gameplay_screen
- * -------------------------------
+ * function:  draw_gs_running
+ * --------------------------
  * TODO - Documentation
+ * TODO - take in boolean to designate if gamestate change has occurred
  */
-static void draw_gameplay_screen(void)
+static void draw_gs_running(void)
 {
   struct ent_snake_seg * dead_seg = snake->tail;
 
@@ -181,11 +192,11 @@ static void draw_gameplay_screen(void)
 }
 
 /**
- * function:  draw_gameover_screen
- * -------------------------------
+ * function:  draw_gs_ending
+ * -------------------------
  * TODO - Documentation
  */
-static void draw_gameover_screen(void)
+static void draw_gs_ending(void)
 {
   // TODO do we even want this as it's own screen?
   mvprintw(0,0,"GAME OVER!");
