@@ -6,6 +6,10 @@
 
 * if game is paused, powerup timer still decreases
 
+#### Graphics
+
+* popup windows can sometimes cause game elements behind it to be erased
+
 #### Keyboard Input
 
 * if compiled to use the keyboard listener thread, a few issues arise:
