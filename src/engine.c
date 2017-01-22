@@ -155,12 +155,12 @@ void engine_start(void)
       case ERR:
         break;
 
+      // (attempt to) enter or exit the paused state
       case PAUSE_KEY:
-        // TODO use gamestate_set()
         if (GS_RUNNING == game_state)
-          game_state = GS_PAUSED;
+          gamestate_set(GS_PAUSED);
         else if (GS_PAUSED == game_state)
-          game_state = GS_RUNNING;
+          gamestate_set(GS_RUNNING);
         break;
 
       // select an item (menu, etc)

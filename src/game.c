@@ -309,6 +309,10 @@ void snake_set_velocity(enum velocity_t velocity)
 
   // TODO if snake is only one unit long, is backtracking OK?
 
+  // if not in GS_RUNNING, disallow velocity changes entirely
+  if (GS_RUNNING != game_state)
+    return;
+
   // disallow backtracking (180 deg velocity change)
   switch (snake->velocity)
   {
@@ -332,9 +336,54 @@ void snake_set_velocity(enum velocity_t velocity)
 }
 
 
-/**
+/*
  * gamestate functions
  */
+
+/**
+ * function:  gamestate_set
+ * ------------------------
+ * update the state machine by moving to the specified state.
+ *
+ * gamestate: the new gamestate to enter
+ *
+ * returns: true if the state was updated, false if not able to enter this state
+ */
+bool gamestate_set(enum gamestate_t gamestate)
+{
+  bool can_enter_state;
+
+  // configure illegal state transitions
+  switch (game_state)
+  {
+    // TODO handle GS_STARTING
+
+    // from GS_RUNNING, we can only enter GS_PAUSED or GS_ENDING
+    case GS_RUNNING:
+      can_enter_state = (GS_PAUSED == gamestate || GS_ENDING == gamestate);
+      break;
+
+    // from GS_PAUSED, we can only enter GS_RUNNING or GS_ENDING
+    case GS_PAUSED:
+      can_enter_state = (GS_RUNNING == gamestate || GS_ENDING == gamestate);
+      break;
+
+    // from GS_ENDING, we can only enter GS_STARTING
+    // TODO handle restarting game from game over screen
+    case GS_ENDING:
+      can_enter_state = (GS_STARTING == gamestate);
+
+    // by default we can enter this new state
+    default:
+      can_enter_state = true;
+      break;
+  }
+
+  if (can_enter_state)
+    game_state = gamestate;
+
+  return can_enter_state;
+}
 
 /**
  * function:  gamestate_to_string

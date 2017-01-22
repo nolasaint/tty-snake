@@ -28,7 +28,7 @@
  *
  * GS_STARTING: game is not yet started (title screen) TODO
  * GS_RUNNING:  game is running (being played)
- * GS_PAUSED:   game is paused (but not over) TODO
+ * GS_PAUSED:   game is paused (but not over)
  * GS_ENDING:   game is over
  * GS_COUNT:    number of game states
  */
@@ -162,8 +162,11 @@ void game_unset(void);
 
 void snake_set_velocity(enum velocity_t velocity);
 
+bool         gamestate_set(enum gamestate_t gamestate);
 const char * gamestate_to_string(enum gamestate_t gamestate);
+
 //const char * velocity_to_string(enum velocity_t velocity);
+
 const char * powerup_to_string(enum powerup_t powerup);
 
 #endif // GAME_H
