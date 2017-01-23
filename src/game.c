@@ -251,6 +251,13 @@ void game_unset(void)
 
 
 /*
+ * per-gamestate update functions
+ */
+
+// TODO
+
+
+/*
  * food functions
  */
 
@@ -349,7 +356,14 @@ void snake_set_velocity(enum velocity_t velocity)
  */
 bool gamestate_set(enum gamestate_t gamestate)
 {
+//  static nanosecond_t last_state_ns = get_time_ns();
   bool can_enter_state;
+
+  // TODO when entering the pause state from GS_RUNNING,
+  // TODO we should take snake->powerup_expire_ns and subtract from it
+  // TODO the value returned by get_time_ns(). This will provide the # of
+  // TODO nanoseconds of powerup remaining. When re-entering GS_RUNNING
+  // TODO we simply set snake->powerup_expire_ns to get_time_ns() + the value
 
   // configure illegal state transitions
   switch (game_state)

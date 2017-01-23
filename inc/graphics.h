@@ -27,6 +27,15 @@
 #define ENT_FOOD_ATTR       A_NORMAL
 #define ENT_FOOD_DISP       ENT_FOOD_CH | ENT_FOOD_ATTR
 
+// powerup display settings
+#define PU_SINGLESTEP_CH    'S'
+#define PU_SINGLESTEP_ATTR  ENT_FOOD_ATTR
+#define PU_SINGLESTEP_DISP  PU_SINGLESTEP_CH | PU_SINGLESTEP_ATTR
+
+#define PU_NOGROW_CH        'N'
+#define PU_NOGROW_ATTR      ENT_FOOD_ATTR
+#define PU_NOGROW_DISP      PU_NOGROW_CH | PU_NOGROW_ATTR
+
 // popup window dimensions
 #define WIN_STARTING_HEIGHT 6
 #define WIN_STARTING_WIDTH  50

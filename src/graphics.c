@@ -138,12 +138,12 @@ static void draw_titlebar(void)
   // re-draw top border
   mvhline(0, 1, ACS_HLINE, game_x_bound - 2);
 
-  // TODO show powerup time remaining
   // draw gamestate string
   mvprintw(0, 2, "[ %s | SCORE: %d | POWERUP: %s ]",
     gamestate_to_string(game_state),
     game_score,
     powerup_to_string(snake->powerup)
+    // TODO show time remaining by modifying powerup_to_string result
   ); 
 }
 
@@ -218,39 +218,6 @@ static void draw_gs_starting(bool is_gamestate_change)
 }
 
 /**
- * function:  draw_gs_paused
- * -------------------------
- * TODO - Documentation
- */
-static void draw_gs_paused(bool is_gamestate_change)
-{
-  if (is_gamestate_change)
-  {
-    // lines to display (centered horiz. and vert.)
-    const char * lines[2] = {
-      "GAME PAUSED",
-      "PRESS P TO UNPAUSE"
-    };
-
-    int win_height = WIN_PAUSE_HEIGHT,
-        win_width  = WIN_PAUSE_WIDTH,
-        win_y      = (LINES - win_height) / 2,
-        win_x      = (COLS - win_width) / 2;
-
-    // create the popup window
-    popup_win = nc_window_create(win_height, win_width, win_y, win_x);
-
-    // draw box around popup window
-    box(popup_win, 0, 0);
-
-    // display window text
-    draw_lines_centered(popup_win, lines, sizeof(lines) / sizeof(lines[0]));
-
-    wrefresh(popup_win);
-  }
-}
-
-/**
  * function:  draw_gs_running
  * --------------------------
  * TODO - Documentation
@@ -289,22 +256,53 @@ static void draw_gs_running(bool is_gamestate_change)
     switch (food->powerup)
     {
       case PU_SINGLESTEP:
-        // TODO
-        food_display_char = 'S' | ENT_FOOD_ATTR;
+        food_display_char = PU_SINGLESTEP_DISP;
         break;
 
       case PU_NOGROW:
-        // TODO
-        food_display_char = 'N' | ENT_FOOD_ATTR;
+        food_display_char = PU_NOGROW_DISP;
         break; 
 
       // PU_NONE, other non-valid states
       default:
-        food_display_char = ENT_FOOD_CH | ENT_FOOD_ATTR;
+        food_display_char = ENT_FOOD_DISP;
         break;
     }
 
     mvaddch(food->y, food->x, food_display_char);
+  }
+}
+
+/**
+ * function:  draw_gs_paused
+ * -------------------------
+ * TODO - Documentation
+ */
+static void draw_gs_paused(bool is_gamestate_change)
+{
+  if (is_gamestate_change)
+  {
+    // lines to display (centered horiz. and vert.)
+    const char * lines[2] = {
+      "GAME PAUSED",
+      "PRESS P TO UNPAUSE"
+    };
+
+    int win_height = WIN_PAUSE_HEIGHT,
+        win_width  = WIN_PAUSE_WIDTH,
+        win_y      = (LINES - win_height) / 2,
+        win_x      = (COLS - win_width) / 2;
+
+    // create the popup window
+    popup_win = nc_window_create(win_height, win_width, win_y, win_x);
+
+    // draw box around popup window
+    box(popup_win, 0, 0);
+
+    // display window text
+    draw_lines_centered(popup_win, lines, sizeof(lines) / sizeof(lines[0]));
+
+    wrefresh(popup_win);
   }
 }
 
