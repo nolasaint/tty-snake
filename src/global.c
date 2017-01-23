@@ -75,7 +75,7 @@ nanosecond_t get_time_ns(void)
  * ----------------------
  * TODO - documentation
  */
-inline void ns2timespec(nanosecond_t ns, struct timespec *ts)
+void ns2timespec(nanosecond_t ns, struct timespec *ts)
 {
   // avoid segmentation faults
   if (ts)

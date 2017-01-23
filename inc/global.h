@@ -73,7 +73,7 @@ void     nc_window_destroy(WINDOW * win, bool should_erase);
 
 millisecond_t get_time_ms(void);
 nanosecond_t  get_time_ns(void);
-inline void   ns2timespec(nanosecond_t ns, struct timespec *ts);
-void          quit(void);
+void ns2timespec(nanosecond_t ns, struct timespec *ts);
+void quit(void);
 
 #endif // GLOBAL_H
