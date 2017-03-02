@@ -9,7 +9,10 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#define ENGINE_TICKRATE 30 // max ticks per second
+#define ENGINE_TICKRATE   30 // max ticks per second
+//#define TICKRATE_ENGINE   30 // max ticks per second
+//#define TICKRATE_GAME     30
+//#define TICKRATE_GRAPHICS 30
 
 #define PAUSE_KEY 'p'
 #define QUIT_KEY  'q'

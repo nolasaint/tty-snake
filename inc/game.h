@@ -12,6 +12,9 @@
 #define ARE_COLLIDING(ent_a,ent_b) \
   ((ent_a)->x == (ent_b)->x && (ent_a)->y == (ent_b)->y)
 
+#define IS_MOVEMENT_TICK(tc) \
+  ((bool) (((tc) % 2) == 0))
+
 // average # of powerups per 100 food spawns
 #define PU_SPAWN_PERCENTAGE 10
 

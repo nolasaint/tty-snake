@@ -20,9 +20,13 @@ struct ent_snake * snake;
 
 // global variables
 static nanosecond_t powerup_durations[PU_COUNT];
+static nanosecond_t gs_begin_ns; // when the current gamestate began
+static unsigned int tick_count;
 
 // private forward declarations
 static void food_spawn(bool);
+
+static bool gamestate_can_transition(enum gamestate_t, enum gamestate_t);
 
 static enum powerup_t rand_powerup(void);
 static void powerup_init(void);
@@ -47,8 +51,10 @@ void game_setup(unsigned int init_x, unsigned int init_y)
   // call other initialization functions
   powerup_init();
 
-  game_state = GS_STARTING;
-  game_score = 0;
+  tick_count  = 0;
+  gs_begin_ns = get_time_ns();
+  game_state  = GS_STARTING;
+  game_score  = 0;
 
   food  = calloc(1, sizeof(struct ent_food));
   snake = calloc(1, sizeof(struct ent_snake));
@@ -98,6 +104,8 @@ bool game_update(void)
     .snake_should_move  = true,
     .snake_new_velocity = snake->velocity // initially unchanging
   };
+
+  tick_count++;
 
   // free dying segments and remove from snake
   while (snake->tail && snake->tail->dying)
@@ -350,56 +358,74 @@ void snake_set_velocity(enum velocity_t velocity)
  * ------------------------
  * update the state machine by moving to the specified state.
  *
- * gamestate: the new gamestate to enter
+ * new_gs: the new gamestate to enter
  *
  * returns: true if the state was updated, false if not able to enter this state
  */
-bool gamestate_set(enum gamestate_t gamestate)
+bool gamestate_set(enum gamestate_t new_gs)
 {
-//  static nanosecond_t last_state_ns = get_time_ns();
-  bool can_enter_state;
-
   // TODO when entering the pause state from GS_RUNNING,
   // TODO we should take snake->powerup_expire_ns and subtract from it
   // TODO the value returned by get_time_ns(). This will provide the # of
   // TODO nanoseconds of powerup remaining. When re-entering GS_RUNNING
   // TODO we simply set snake->powerup_expire_ns to get_time_ns() + the value
 
+  bool can_transition = gamestate_can_transition(game_state, new_gs);
+
+  // TODO change game_state to cur_gs
+
+  if (can_transition)
+  {
+    // handle entering a new gamestate
+    switch (new_gs)
+    {
+      // TODO
+    }
+
+    game_state = new_gs;
+  }
+
+  return can_transition;
+}
+
+
+static bool gamestate_can_transition(enum gamestate_t from, enum gamestate_t to)
+{
+  bool can_transition;
+
   // configure illegal state transitions
-  switch (game_state)
+  switch (from)
   {
     // from GS_STARTING, we can only enter GS_RUNNING or GS_ENDING
     case GS_STARTING:
-      can_enter_state = (GS_RUNNING == gamestate || GS_ENDING == gamestate);
+      can_transition = (GS_RUNNING == to || GS_ENDING == to);
       break;
 
     // from GS_RUNNING, we can only enter GS_PAUSED or GS_ENDING
     case GS_RUNNING:
-      can_enter_state = (GS_PAUSED == gamestate || GS_ENDING == gamestate);
+      can_transition = (GS_PAUSED == to || GS_ENDING == to);
       break;
 
     // from GS_PAUSED, we can only enter GS_RUNNING or GS_ENDING
     case GS_PAUSED:
-      can_enter_state = (GS_RUNNING == gamestate || GS_ENDING == gamestate);
+      can_transition = (GS_RUNNING == to || GS_ENDING == to);
       break;
 
     // from GS_ENDING, we can only enter GS_STARTING
     // TODO handle restarting game from game over screen
     case GS_ENDING:
-      can_enter_state = (GS_STARTING == gamestate);
+      can_transition = (GS_STARTING == to);
       break;
 
     // by default we can enter this new state
     default:
-      can_enter_state = true;
+      can_transition = true;
       break;
   }
 
-  if (can_enter_state)
-    game_state = gamestate;
-
-  return can_enter_state;
+  return can_transition;
 }
+
 
 /**
  * function:  gamestate_to_string
